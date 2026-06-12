@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>週間 TODO</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0D0D0D;--surface:#161616;--surface2:#1E1E1E;
+  --border:#2A2A2A;--border2:#333;
+  --accent:#7EE8A2;--accent-dim:#2A4233;
+  --text:#E8E8E8;--text-sub:#666;--text-done:#3A3A3A;
+  --danger:#FF5555;--warn:#F0A500;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;--r:6px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;-webkit-tap-highlight-color:transparent}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.app{display:flex;flex-direction:column;height:100dvh;max-width:680px;margin:0 auto}
+header{display:flex;align-items:center;gap:8px;padding:12px 12px 10px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.logo{font-family:var(--mono);font-size:.68rem;font-weight:600;color:var(--accent);letter-spacing:.1em}
+.hdr-right{display:flex;align-items:center;gap:5px;margin-left:auto;flex-wrap:nowrap}
+.nav-btn{background:none;border:1px solid var(--border);color:var(--text-sub);width:30px;height:30px;border-radius:var(--r);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.nav-btn:active{border-color:var(--accent);color:var(--accent)}
+.nav-btn:disabled{opacity:.25;cursor:default}
+.week-range{font-family:var(--mono);font-size:.7rem;color:var(--text-sub);min-width:78px;text-align:center}
+.pill-btn{background:none;border:1px solid var(--border);color:var(--text-sub);padding:0 9px;height:30px;border-radius:var(--r);font-size:.7rem;cursor:pointer;font-family:var(--mono);transition:all .15s;white-space:nowrap}
+.pill-btn:active,.pill-btn.active{border-color:var(--accent);color:var(--accent)}
+.pill-btn.active{background:var(--accent-dim)}
+.stats{display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.progress-track{flex:1;height:2px;background:var(--border2);border-radius:1px}
+.progress-fill{height:100%;background:var(--accent);border-radius:1px;transition:width .4s}
+.stats-label{font-family:var(--mono);font-size:.68rem;color:var(--text-sub);white-space:nowrap}
+.streak{font-family:var(--mono);font-size:.68rem;color:var(--text-sub);white-space:nowrap}
+.streak b{color:var(--accent)}
+.body{flex:1;overflow-y:auto;padding:10px 12px 80px}
+.sec-title{font-family:var(--mono);font-size:.63rem;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase;padding:6px 2px 5px}
+.carry-banner{background:var(--accent-dim);border:1px solid var(--accent);border-radius:var(--r);padding:9px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;font-size:.78rem;color:var(--accent)}
+.carry-banner span{flex:1}
+.carry-btn{background:var(--accent);color:#0D0D0D;border:none;border-radius:4px;padding:4px 10px;font-size:.72rem;font-weight:600;cursor:pointer}
+.carry-dismiss{background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:.9rem;padding:0 2px}
+
+/* ── deadline list ── */
+.dl-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;overflow:hidden}
+.dl-empty{font-size:.78rem;color:var(--text-sub);padding:8px 4px 10px}
+.dl-item{display:flex;align-items:center;gap:6px;padding:9px 8px 9px 12px;border-bottom:1px solid var(--border);transition:background .12s;position:relative}
+.dl-item:last-child{border-bottom:none}
+.dl-item:hover{background:var(--surface2)}
+.dl-item.done-dl .dl-text{text-decoration:line-through;color:var(--text-done)}
+.dl-item.done-dl .dl-badge{opacity:.35}
+.dl-cb{width:15px;height:15px;border-radius:3px;border:1.5px solid var(--border2);flex-shrink:0;appearance:none;-webkit-appearance:none;cursor:pointer;position:relative;transition:all .15s;background:transparent}
+.dl-cb:checked{background:var(--accent);border-color:var(--accent)}
+.dl-cb:checked::after{content:'';position:absolute;left:2px;top:0px;width:7px;height:4px;border-left:1.5px solid #0D0D0D;border-bottom:1.5px solid #0D0D0D;transform:rotate(-45deg)}
+.dl-text{flex:1;font-size:.84rem;line-height:1.4;word-break:break-all;cursor:pointer}
+.dl-badge{font-family:var(--mono);font-size:.6rem;border-radius:3px;padding:2px 6px;white-space:nowrap;flex-shrink:0;border:1px solid;cursor:pointer;transition:opacity .15s}
+.dl-badge:hover{opacity:.7}
+.dl-badge.overdue{color:var(--danger);border-color:var(--danger);background:rgba(255,85,85,.1)}
+.dl-badge.today-due{color:var(--danger);border-color:var(--danger);background:rgba(255,85,85,.1)}
+.dl-badge.soon{color:var(--warn);border-color:var(--warn);background:rgba(240,165,0,.1)}
+.dl-badge.future{color:var(--text-sub);border-color:var(--border2)}
+.dl-date-input{font-family:var(--mono);font-size:.6rem;background:var(--surface2);border:1px solid var(--accent);border-radius:3px;color:var(--text);padding:1px 4px;color-scheme:dark;outline:none;flex-shrink:0}
+.dl-goto{background:none;border:none;color:var(--text-sub);font-size:.78rem;font-family:var(--mono);cursor:pointer;padding:6px 4px;transition:color .15s;flex-shrink:0;opacity:.5}
+.dl-goto:active{color:var(--accent);opacity:1}
+.dl-edit{background:none;border:none;color:var(--text-sub);font-size:.78rem;cursor:pointer;padding:6px 4px;transition:color .15s;flex-shrink:0;opacity:.5}
+.dl-edit:active{color:var(--accent);opacity:1}
+.dl-del{background:none;border:none;color:var(--text-sub);font-size:.78rem;cursor:pointer;padding:6px 4px;transition:color .15s;flex-shrink:0;opacity:.5}
+.dl-del:active{color:var(--danger);opacity:1}
+
+/* deadline chip in day */
+.dl-chip{display:flex;align-items:center;gap:7px;padding:6px 10px 6px 12px;border-top:1px solid var(--border)}
+.dl-chip-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.dl-chip.overdue .dl-chip-dot,.dl-chip.today-due .dl-chip-dot{background:var(--danger)}
+.dl-chip.soon .dl-chip-dot{background:var(--warn)}
+.dl-chip.future .dl-chip-dot{background:var(--text-sub)}
+.dl-chip-text{flex:1;font-size:.78rem;color:var(--text-sub);word-break:break-all}
+.dl-chip.done-chip .dl-chip-text{text-decoration:line-through;color:var(--text-done)}
+.dl-chip-badge{font-family:var(--mono);font-size:.6rem;color:var(--text-sub)}
+
+/* ── day cards ── */
+.day-card{margin-bottom:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color .15s}
+.day-card.drag-over{border-color:var(--accent)}
+.day-head{display:flex;align-items:center;gap:8px;padding:7px 10px 7px 12px;cursor:pointer;user-select:none}
+.day-label{font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--text-sub);width:18px}
+.day-date-str{font-size:.72rem;color:var(--text-sub);flex:1}
+.day-meta{display:flex;align-items:center;gap:6px}
+.badge{font-family:var(--mono);font-size:.62rem;color:var(--text-sub);background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:1px 5px}
+.badge.done-all{color:var(--accent);border-color:var(--accent-dim)}
+.collapse-icon{color:var(--text-sub);font-size:.6rem;transition:transform .2s}
+.day-card.collapsed .collapse-icon{transform:rotate(-90deg)}
+.day-card.is-today .day-head{background:var(--surface2)}
+.day-card.is-today .day-label{color:var(--accent)}
+.task-list{list-style:none;display:none}
+.day-card:not(.collapsed) .task-list{display:block}
+
+/* ── task items ── */
+.task-item{display:flex;align-items:center;gap:6px;padding:9px 8px 9px 12px;border-top:1px solid var(--border);transition:background .12s}
+.task-item.dragging{opacity:.4}
+.cb{width:15px;height:15px;border-radius:3px;border:1.5px solid var(--border2);flex-shrink:0;appearance:none;-webkit-appearance:none;cursor:pointer;position:relative;transition:all .15s;background:transparent}
+.cb:checked{background:var(--accent);border-color:var(--accent)}
+.cb:checked::after{content:'';position:absolute;left:2px;top:0px;width:7px;height:4px;border-left:1.5px solid #0D0D0D;border-bottom:1.5px solid #0D0D0D;transform:rotate(-45deg)}
+.task-text{flex:1;font-size:.84rem;line-height:1.4;word-break:break-all;cursor:pointer;transition:color .2s}
+.task-item.done .task-text{text-decoration:line-through;color:var(--text-done)}
+/* inline edit input */
+.task-edit-inp{flex:1;background:var(--surface2);border:1px solid var(--accent);border-radius:4px;color:var(--text);font-size:.84rem;font-family:var(--sans);padding:2px 6px;outline:none}
+.recur-icon{font-size:.65rem;color:var(--accent);flex-shrink:0;cursor:pointer;padding:6px 3px;transition:opacity .15s}
+.recur-icon:hover{opacity:.7}
+.edit-btn{background:none;border:none;color:var(--text-sub);font-size:.78rem;cursor:pointer;padding:6px 4px;transition:color .15s;flex-shrink:0;opacity:.5}
+.edit-btn:active{color:var(--accent);opacity:1}
+.del-btn{background:none;border:none;color:var(--text-sub);font-size:.8rem;cursor:pointer;padding:6px 4px;transition:color .15s;flex-shrink:0;opacity:.5}
+.del-btn:active{color:var(--danger);opacity:1}
+
+/* add row */
+.add-row{display:flex;gap:6px;padding:6px 10px 6px 12px;border-top:1px solid var(--border)}
+.add-row:focus-within{background:var(--surface2)}
+.add-inp{flex:1;background:transparent;border:none;color:var(--text);font-size:.82rem;font-family:var(--sans);outline:none}
+.add-inp::placeholder{color:var(--text-sub)}
+.add-row-btn{background:none;border:none;color:var(--text-sub);font-size:.9rem;cursor:pointer;padding:2px 4px;transition:color .15s;border-radius:3px}
+.add-row-btn:hover{color:var(--accent)}
+.recur-toggle{background:none;border:1px solid transparent;color:var(--text-sub);font-size:.75rem;cursor:pointer;padding:2px 5px;border-radius:3px;transition:all .15s;font-family:var(--mono)}
+.recur-toggle.on{color:var(--accent);border-color:var(--accent-dim)}
+
+/* ── modals ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:20px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px}
+.modal-title{font-family:var(--mono);font-size:.7rem;color:var(--accent);letter-spacing:.1em;text-transform:uppercase}
+.modal-field{display:flex;flex-direction:column;gap:5px}
+.modal-label{font-size:.72rem;color:var(--text-sub)}
+.modal-inp{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-size:.88rem;font-family:var(--sans);padding:8px 10px;outline:none;transition:border-color .15s;width:100%}
+.modal-inp:focus{border-color:var(--accent)}
+.modal-inp[type=date]{color-scheme:dark}
+.modal-row{display:flex;gap:8px;justify-content:flex-end}
+.modal-cancel{background:none;border:1px solid var(--border2);color:var(--text-sub);border-radius:var(--r);padding:7px 16px;font-size:.82rem;cursor:pointer;transition:all .15s}
+.modal-cancel:hover{color:var(--text);border-color:var(--text-sub)}
+.modal-submit{background:var(--accent);color:#0D0D0D;border:none;border-radius:var(--r);padding:7px 16px;font-size:.82rem;font-weight:600;cursor:pointer;transition:opacity .15s}
+.modal-submit:hover{opacity:.85}
+/* day checkboxes in recur modal */
+.day-checks{display:flex;gap:6px;flex-wrap:wrap}
+.day-check-label{display:flex;align-items:center;gap:4px;font-size:.78rem;cursor:pointer;padding:4px 8px;border:1px solid var(--border2);border-radius:4px;transition:all .15s;user-select:none}
+.day-check-label:hover{border-color:var(--accent)}
+.day-check-label input{display:none}
+.day-check-label.checked{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+
+/* fab */
+.fab-group{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;align-items:flex-end;gap:10px;z-index:200}
+.fab{width:48px;height:48px;border-radius:50%;background:var(--accent);color:#0D0D0D;border:none;font-size:1.4rem;cursor:pointer;box-shadow:0 4px 20px rgba(126,232,162,.25);display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
+.fab:hover{transform:scale(1.08)}
+.fab-subs{display:flex;flex-direction:column;align-items:flex-end;gap:6px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;transform:translateY(8px)}
+.fab-group.open .fab-subs{opacity:1;pointer-events:auto;transform:translateY(0)}
+.fab-sub-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:20px;padding:6px 14px;font-size:.78rem;cursor:pointer;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:6px}
+.fab-sub-btn:hover{border-color:var(--accent);color:var(--accent)}
+.shortcuts{position:fixed;bottom:84px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px;font-family:var(--mono);font-size:.65rem;color:var(--text-sub);line-height:1.8;z-index:199;display:none;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.shortcuts.visible{display:block}
+.shortcuts kbd{background:var(--surface2);border:1px solid var(--border2);border-radius:3px;padding:0 4px;color:var(--text)}
+.toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:7px 14px;font-size:.78rem;color:var(--text);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:300;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">WTODO</div>
+    <div class="hdr-right">
+      <button class="nav-btn" id="prev">&#8249;</button>
+      <span class="week-range" id="wrange">-</span>
+      <button class="nav-btn" id="next">&#8250;</button>
+      <button class="pill-btn" id="goToday">今週</button>
+      <button class="pill-btn" id="toggleDl" title="締切リスト">📋</button>
+      <button class="pill-btn" id="exportBtn" title="データを書き出し">⬇</button>
+      <button class="pill-btn" id="importBtn" title="データを読み込み">⬆</button>
+      <input type="file" id="importFile" accept=".json" style="display:none">
+    </div>
+  </header>
+  <div class="stats">
+    <div class="progress-track"><div class="progress-fill" id="pfill" style="width:0%"></div></div>
+    <span class="stats-label" id="slabel">0/0</span>
+    <span class="streak" id="streak"></span>
+  </div>
+  <div class="body" id="body"></div>
+</div>
+
+<!-- deadline add/edit modal -->
+<div class="overlay" id="dlOverlay">
+  <div class="modal">
+    <div class="modal-title" id="dlModalTitle">締切タスクを追加</div>
+    <div class="modal-field">
+      <label class="modal-label">タスク内容</label>
+      <input class="modal-inp" id="dlText" placeholder="例：企画書を提出する" maxlength="120" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">締切日</label>
+      <input class="modal-inp" type="date" id="dlDate">
+    </div>
+    <div class="modal-row">
+      <button class="modal-cancel" id="dlCancel">キャンセル</button>
+      <button class="modal-submit" id="dlSubmit">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- recur edit modal -->
+<div class="overlay" id="recurOverlay">
+  <div class="modal">
+    <div class="modal-title">繰り返しタスクを編集</div>
+    <div class="modal-field">
+      <label class="modal-label">タスク内容</label>
+      <input class="modal-inp" id="recurText" placeholder="タスク名" maxlength="120" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">繰り返す曜日</label>
+      <div class="day-checks" id="recurDays"></div>
+    </div>
+    <div class="modal-row">
+      <button class="modal-cancel" id="recurCancel">キャンセル</button>
+      <button class="modal-submit" id="recurSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="fab-group" id="fabGroup">
+  <div class="fab-subs">
+    <button class="fab-sub-btn" id="fabDeadline">📅 締切を設定</button>
+    <button class="fab-sub-btn" id="fabToday">＋ 今日に追加</button>
+  </div>
+  <button class="fab" id="fab">＋</button>
+</div>
+<div class="shortcuts" id="hints">
+  <kbd>✎</kbd> タップで編集<br>
+  <kbd>n</kbd> 今日に追加<br>
+  <kbd>d</kbd> 締切タスク追加<br>
+  <kbd>← →</kbd> 週移動<br>
+  <kbd>?</kbd> ヘルプ
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORE='wtodo_v4';
+const DAY_LABELS=['日','月','火','水','木','金','土'];
+function load(){try{return JSON.parse(localStorage.getItem(STORE)||'null')||init()}catch{return init()}}
+function init(){return{tasks:{},deadlines:[],recurring:[],carried:{},streak:{lastDoneDate:'',count:0},dlVisible:true,dlShowDone:false}}
+function save(){localStorage.setItem(STORE,JSON.stringify(DATA))}
+let DATA=load();
+let offsetWeeks=0;
+
+/* dates */
+function today(){const d=new Date();d.setHours(0,0,0,0);return d}
+function todayStr(){return ds(today())}
+function ds(d){return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())}
+function p(n){return String(n).padStart(2,'0')}
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r}
+function getMon(d){const r=new Date(d);r.setHours(0,0,0,0);const day=r.getDay();r.setDate(r.getDate()+(day===0?-6:1-day));return r}
+function fmtShort(d){return(d.getMonth()+1)+'/'+d.getDate()}
+function weekKey(mon){return ds(mon)}
+function uid(){return Math.random().toString(36).slice(2,9)}
+function parseDate(str){const p=str.split('-').map(Number);const r=new Date(p[0],p[1]-1,p[2]);r.setHours(0,0,0,0);return r}
+function daysUntil(s){return Math.round((parseDate(s)-today())/86400000)}
+
+function dlUrgency(dl){
+  if(dl.done) return 'done';
+  const d=daysUntil(dl.dueDate);
+  if(d<0) return 'overdue';
+  if(d===0) return 'today-due';
+  if(d<=3) return 'soon';
+  return 'future';
+}
+function dlLabel(dl){
+  const d=daysUntil(dl.dueDate);
+  if(d<0) return Math.abs(d)+'日超過';
+  if(d===0) return '今日まで';
+  if(d===1) return '明日まで';
+  return 'あと'+d+'日';
+}
+
+function injectRecurring(monday){
+  const wk='_recur_'+weekKey(monday);
+  if(DATA.carried[wk]) return;
+  for(const rec of DATA.recurring){
+    for(const dayIdx of rec.days){
+      const offset=dayIdx===0?6:dayIdx-1;
+      const d=addDays(monday,offset);
+      const key=ds(d);
+      if(!DATA.tasks[key]) DATA.tasks[key]=[];
+      if(!DATA.tasks[key].some(t=>t.recurId===rec.id))
+        DATA.tasks[key].push({id:uid(),text:rec.text,done:false,recurId:rec.id});
+    }
+  }
+  DATA.carried[wk]=true;save();
+}
+
+function updateStreak(){
+  const td=todayStr(),tasks=DATA.tasks[td]||[];
+  if(tasks.length>0&&tasks.every(t=>t.done)&&DATA.streak.lastDoneDate!==td){
+    const yest=ds(addDays(today(),-1));
+    DATA.streak.count=(DATA.streak.lastDoneDate===yest)?DATA.streak.count+1:1;
+    DATA.streak.lastDoneDate=td;save();
+  }
+}
+
+/* ════ RENDER ════ */
+function render(){
+  const mon=addDays(getMon(today()),offsetWeeks*7);
+  const sun=addDays(mon,6);
+  document.getElementById('wrange').textContent=fmtShort(mon)+'–'+fmtShort(sun);
+  document.getElementById('prev').disabled=offsetWeeks<=-12;
+  document.getElementById('next').disabled=offsetWeeks>=52;
+  injectRecurring(mon);
+
+  const wk=weekKey(mon);
+  const prevMon=addDays(mon,-7);
+  let carryTasks=[];
+  if(!DATA.carried['carry_'+wk]){
+    for(let i=0;i<7;i++){
+      for(const t of(DATA.tasks[ds(addDays(prevMon,i))]||[]))
+        if(!t.done) carryTasks.push({...t});
+    }
+  }
+
+  let total=0,done=0;
+  for(let i=0;i<7;i++){
+    const tl=DATA.tasks[ds(addDays(mon,i))]||[];
+    total+=tl.length;done+=tl.filter(t=>t.done).length;
+  }
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('pfill').style.width=pct+'%';
+  document.getElementById('slabel').textContent=done+'/'+total;
+  updateStreak();
+  const sc=DATA.streak.count;
+  document.getElementById('streak').innerHTML=sc>=2?'🔥 <b>'+sc+'</b>日連続':'';
+  document.getElementById('toggleDl').classList.toggle('active',DATA.dlVisible);
+
+  const body=document.getElementById('body');
+  body.innerHTML='';
+
+  /* carry banner */
+  if(carryTasks.length>0){
+    const b=document.createElement('div');
+    b.className='carry-banner';
+    b.innerHTML='<span>⏩ 前週の未完了 <b style="color:var(--accent)">'+carryTasks.length+'</b> 件</span>'
+      +'<button class="carry-btn" id="doCarry">月曜に追加</button>'
+      +'<button class="carry-dismiss" id="dismissCarry">✕</button>';
+    body.appendChild(b);
+    b.querySelector('#doCarry').onclick=()=>{
+      const mk=ds(mon);
+      if(!DATA.tasks[mk]) DATA.tasks[mk]=[];
+      for(const t of carryTasks) DATA.tasks[mk].push({id:uid(),text:t.text,done:false});
+      DATA.carried['carry_'+wk]=true;save();render();
+    };
+    b.querySelector('#dismissCarry').onclick=()=>{DATA.carried['carry_'+wk]=true;save();render();};
+  }
+
+  /* deadline section */
+  if(DATA.dlVisible){
+    const dlTitleRow=document.createElement('div');
+    dlTitleRow.style.cssText='display:flex;align-items:center;gap:8px;margin-top:2px';
+    dlTitleRow.innerHTML='<span class="sec-title" style="flex:1;padding-bottom:5px">締切タスク</span>'
+      +'<button id="toggleDlDone" style="background:none;border:none;color:var(--text-sub);font-size:.68rem;font-family:var(--mono);cursor:pointer;padding-bottom:5px">'
+      +(DATA.dlShowDone?'完了を隠す':'完了を表示')+'</button>';
+    body.appendChild(dlTitleRow);
+    dlTitleRow.querySelector('#toggleDlDone').onclick=()=>{DATA.dlShowDone=!DATA.dlShowDone;save();render();};
+
+    const active=DATA.deadlines.filter(d=>!d.done).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+    const doneDl=DATA.deadlines.filter(d=>d.done).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+    const list=[...active,...(DATA.dlShowDone?doneDl:[])];
+
+    if(list.length===0){
+      const em=document.createElement('div');
+      em.className='dl-empty';
+      em.textContent='締切タスクなし — 📅 で追加';
+      body.appendChild(em);
+    } else {
+      const dlCard=document.createElement('div');
+      dlCard.className='dl-card';
+      for(const dl of list) dlCard.appendChild(makeDlItem(dl,mon,sun));
+      body.appendChild(dlCard);
+    }
+  }
+
+  /* week title */
+  const wt=document.createElement('div');
+  wt.className='sec-title';wt.style.marginTop='10px';wt.textContent='今週のタスク';
+  body.appendChild(wt);
+
+  /* day cards */
+  for(let i=0;i<7;i++){
+    const d=addDays(mon,i);
+    const key=ds(d);
+    const tasks=DATA.tasks[key]||[];
+    const isToday=key===todayStr();
+    const doneCnt=tasks.filter(t=>t.done).length;
+    const dlsDay=DATA.deadlines.filter(dl=>dl.dueDate===key);
+
+    const card=document.createElement('div');
+    card.className='day-card'+(isToday?' is-today':'');
+    card.dataset.key=key;
+    if(!isToday&&tasks.length===0&&dlsDay.length===0) card.classList.add('collapsed');
+
+    const urgentDl=dlsDay.find(dl=>!dl.done&&daysUntil(dl.dueDate)<=0);
+    const anyDl=dlsDay.find(dl=>!dl.done);
+    const dot=anyDl?'<span style="width:5px;height:5px;border-radius:50%;background:'+(urgentDl?'var(--danger)':'var(--warn)')+';flex-shrink:0;display:inline-block"></span>':'';
+
+    const head=document.createElement('div');
+    head.className='day-head';
+    head.innerHTML='<span class="day-label">'+DAY_LABELS[d.getDay()]+'</span>'
+      +'<span class="day-date-str">'+fmtShort(d)+'</span>'
+      +'<div class="day-meta">'+dot
+      +'<span class="badge'+(doneCnt===tasks.length&&tasks.length>0?' done-all':'')+'">'+doneCnt+'/'+tasks.length+'</span>'
+      +'<span class="collapse-icon">▾</span></div>';
+    head.onclick=()=>card.classList.toggle('collapsed');
+    card.appendChild(head);
+
+    const ul=document.createElement('ul');
+    ul.className='task-list';
+    for(const t of tasks) ul.appendChild(makeTaskItem(t,key));
+    for(const dl of dlsDay){
+      const u=dlUrgency(dl);
+      const chip=document.createElement('div');
+      chip.className='dl-chip '+u+(dl.done?' done-chip':'');
+      chip.innerHTML='<span class="dl-chip-dot"></span>'
+        +'<span class="dl-chip-text">'+esc(dl.text)+'</span>'
+        +'<span class="dl-chip-badge">'+dlLabel(dl)+'</span>';
+      ul.appendChild(chip);
+    }
+
+    const addRow=document.createElement('div');
+    addRow.className='add-row';
+    addRow.innerHTML='<input class="add-inp" placeholder="タスクを追加…" maxlength="120" data-key="'+key+'" autocomplete="off" spellcheck="false">'
+      +'<button class="recur-toggle" title="毎週繰り返し">↺</button>'
+      +'<button class="add-row-btn" title="追加">↩</button>';
+    const inp=addRow.querySelector('.add-inp');
+    const recurBtn=addRow.querySelector('.recur-toggle');
+    let recurMode=false;
+    recurBtn.onclick=()=>{recurMode=!recurMode;recurBtn.classList.toggle('on',recurMode)};
+    const doAdd=()=>{
+      const v=inp.value.trim();if(!v)return;
+      if(!DATA.tasks[key]) DATA.tasks[key]=[];
+      if(recurMode){
+        const rec={id:uid(),text:v,days:[d.getDay()]};
+        DATA.recurring.push(rec);
+        DATA.tasks[key].push({id:uid(),text:v,done:false,recurId:rec.id});
+        toast('毎週繰り返しで追加');
+      } else {
+        DATA.tasks[key].push({id:uid(),text:v,done:false});
+      }
+      save();render();
+      requestAnimationFrame(()=>{
+        const i2=document.querySelector('.add-inp[data-key="'+key+'"]');
+        if(i2) i2.focus();
+      });
+    };
+    addRow.querySelector('.add-row-btn').onclick=doAdd;
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doAdd();}if(e.key==='Escape')inp.blur();});
+    card.appendChild(ul);card.appendChild(addRow);
+
+    body.appendChild(card);
+  }
+}
+
+/* ════ DEADLINE ITEM ════ */
+function makeDlItem(dl,mon,sun){
+  const u=dlUrgency(dl);
+  const due=parseDate(dl.dueDate);
+  const inWeek=due>=mon&&due<=sun;
+  const div=document.createElement('div');
+  div.className='dl-item'+(dl.done?' done-dl':'');
+
+  const cb=document.createElement('input');
+  cb.type='checkbox';cb.className='dl-cb';if(dl.done) cb.checked=true;
+
+  const textSpan=document.createElement('span');
+  textSpan.className='dl-text';
+  textSpan.textContent=dl.text;
+  textSpan.onclick=()=>{dl.done=!dl.done;save();render();};
+
+  const badge=document.createElement('span');
+  badge.className='dl-badge '+u;
+  badge.textContent=dlLabel(dl);
+
+  const editBtn=document.createElement('button');
+  editBtn.className='dl-edit';editBtn.title='編集';editBtn.textContent='✎';
+  editBtn.onclick=()=>openDlModal(dl.id);
+
+  const gotoBtn=document.createElement('button');
+  gotoBtn.className='dl-goto';gotoBtn.title='その週へ';gotoBtn.textContent='→';
+  if(!inWeek) gotoBtn.style.visibility='hidden';
+
+  const delBtn=document.createElement('button');
+  delBtn.className='dl-del';delBtn.textContent='✕';
+
+  div.appendChild(cb);
+  div.appendChild(textSpan);
+  div.appendChild(badge);
+  div.appendChild(editBtn);
+  div.appendChild(gotoBtn);
+  div.appendChild(delBtn);
+
+  cb.onchange=e=>{dl.done=e.target.checked;save();render();};
+
+  gotoBtn.onclick=()=>{
+    const cur=addDays(getMon(today()),offsetWeeks*7);
+    offsetWeeks=Math.round((getMon(due)-cur)/604800000);
+    save();render();toast(fmtShort(due)+'の週へ移動');
+  };
+  delBtn.onclick=()=>{DATA.deadlines=DATA.deadlines.filter(x=>x.id!==dl.id);save();render();};
+  return div;
+}
+
+/* ════ TASK ITEM ════ */
+function makeTaskItem(t,key){
+  const li=document.createElement('li');
+  li.className='task-item'+(t.done?' done':'');
+  li.dataset.id=t.id;
+
+  const cb=document.createElement('input');
+  cb.type='checkbox';cb.className='cb';if(t.done) cb.checked=true;
+
+  const textSpan=document.createElement('span');
+  textSpan.className='task-text';
+  textSpan.textContent=t.text;
+  textSpan.onclick=()=>{t.done=!t.done;save();render();};
+
+  li.appendChild(cb);
+  li.appendChild(textSpan);
+
+  if(t.recurId){
+    const ri=document.createElement('span');
+    ri.className='recur-icon';ri.title='繰り返し設定を編集';ri.textContent='↺';
+    ri.onclick=e=>{e.stopPropagation();openRecurModal(t.recurId);};
+    li.appendChild(ri);
+  }
+
+  const editBtn=document.createElement('button');
+  editBtn.className='edit-btn';editBtn.title='編集';editBtn.textContent='✎';
+  li.appendChild(editBtn);
+
+  const delBtn=document.createElement('button');
+  delBtn.className='del-btn';delBtn.textContent='✕';
+  li.appendChild(delBtn);
+
+  cb.onchange=e=>{t.done=e.target.checked;save();render();};
+
+  const startEdit=()=>{
+    li.classList.add('editing');
+    const inp=document.createElement('input');
+    inp.className='task-edit-inp';
+    inp.value=t.text;
+    li.replaceChild(inp,textSpan);
+    inp.focus();inp.select();
+    const commit=()=>{
+      const v=inp.value.trim();
+      if(v&&v!==t.text){
+        t.text=v;
+        if(t.recurId){
+          const rec=DATA.recurring.find(r=>r.id===t.recurId);
+          if(rec) rec.text=v;
+        }
+        save();
+      }
+      render();
+    };
+    inp.addEventListener('keydown',e2=>{
+      if(e2.key==='Enter'){e2.preventDefault();commit();}
+      if(e2.key==='Escape'){render();}
+    });
+    inp.addEventListener('blur',commit);
+  };
+  editBtn.onclick=e=>{e.stopPropagation();startEdit();};
+
+  delBtn.onclick=e=>{
+    e.stopPropagation();
+    if(t.recurId&&confirm('繰り返し設定も削除?\nOK=全削除 / キャンセル=今週だけ'))
+      DATA.recurring=DATA.recurring.filter(r=>r.id!==t.recurId);
+    DATA.tasks[key]=(DATA.tasks[key]||[]).filter(x=>x.id!==t.id);
+    save();render();
+  };
+  return li;
+}
+
+/* ════ DEADLINE MODAL (add/edit) ════ */
+let dlEditId=null;
+function openDlModal(editId){
+  dlEditId=editId||null;
+  const isEdit=!!dlEditId;
+  document.getElementById('dlModalTitle').textContent=isEdit?'締切タスクを編集':'締切タスクを追加';
+  document.getElementById('dlSubmit').textContent=isEdit?'保存':'追加';
+  if(isEdit){
+    const dl=DATA.deadlines.find(d=>d.id===dlEditId);
+    document.getElementById('dlText').value=dl.text;
+    document.getElementById('dlDate').value=dl.dueDate;
+  } else {
+    document.getElementById('dlText').value='';
+    document.getElementById('dlDate').value=todayStr();
+  }
+  document.getElementById('dlOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('dlText').focus(),80);
+}
+function closeDlModal(){document.getElementById('dlOverlay').classList.remove('open');dlEditId=null;}
+document.getElementById('dlCancel').onclick=closeDlModal;
+document.getElementById('dlOverlay').onclick=e=>{if(e.target===e.currentTarget)closeDlModal()};
+document.getElementById('dlSubmit').onclick=()=>{
+  const text=document.getElementById('dlText').value.trim();
+  const date=document.getElementById('dlDate').value;
+  if(!text||!date){toast('テキストと日付を入力してください');return;}
+  if(dlEditId){
+    const dl=DATA.deadlines.find(d=>d.id===dlEditId);
+    if(dl){dl.text=text;dl.dueDate=date;}
+    toast('更新しました');
+  } else {
+    DATA.deadlines.push({id:uid(),text,dueDate:date,done:false});
+    toast('締切タスクを追加しました');
+  }
+  save();closeDlModal();render();
+};
+document.getElementById('dlText').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('dlDate').focus();}});
+document.getElementById('dlDate').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('dlSubmit').click();}});
+
+/* ════ RECUR EDIT MODAL ════ */
+let recurEditId=null;
+function openRecurModal(recId){
+  recurEditId=recId;
+  const rec=DATA.recurring.find(r=>r.id===recId);
+  if(!rec) return;
+  document.getElementById('recurText').value=rec.text;
+  const container=document.getElementById('recurDays');
+  container.innerHTML='';
+  for(let i=0;i<7;i++){
+    const label=document.createElement('label');
+    label.className='day-check-label'+(rec.days.includes(i)?' checked':'');
+    label.innerHTML='<input type="checkbox" value="'+i+'"'+(rec.days.includes(i)?' checked':'')+'>'+DAY_LABELS[i];
+    label.querySelector('input').addEventListener('change',function(){
+      label.classList.toggle('checked',this.checked);
+    });
+    container.appendChild(label);
+  }
+  document.getElementById('recurOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('recurText').focus(),80);
+}
+function closeRecurModal(){document.getElementById('recurOverlay').classList.remove('open');recurEditId=null;}
+document.getElementById('recurCancel').onclick=closeRecurModal;
+document.getElementById('recurOverlay').onclick=e=>{if(e.target===e.currentTarget)closeRecurModal()};
+document.getElementById('recurSave').onclick=()=>{
+  const text=document.getElementById('recurText').value.trim();
+  const days=[...document.querySelectorAll('#recurDays input:checked')].map(i=>parseInt(i.value));
+  if(!text){toast('タスク名を入力してください');return;}
+  if(days.length===0){toast('曜日を選択してください');return;}
+  const rec=DATA.recurring.find(r=>r.id===recurEditId);
+  if(rec){
+    rec.text=text;rec.days=days;
+    /* also update existing task texts this week */
+    for(const tasks of Object.values(DATA.tasks)){
+      for(const t of tasks) if(t.recurId===rec.id) t.text=text;
+    }
+    save();toast('繰り返し設定を更新しました');
+  }
+  closeRecurModal();render();
+};
+
+/* ════ FAB ════ */
+const fabGroup=document.getElementById('fabGroup');
+document.getElementById('fab').onclick=e=>{e.stopPropagation();fabGroup.classList.toggle('open')};
+document.getElementById('fabToday').onclick=()=>{
+  fabGroup.classList.remove('open');offsetWeeks=0;render();
+  requestAnimationFrame(()=>{
+    const inp=document.querySelector('.add-inp[data-key="'+todayStr()+'"]');
+    if(inp){inp.closest('.day-card').classList.remove('collapsed');inp.focus();inp.scrollIntoView({behavior:'smooth',block:'center'});}
+  });
+};
+document.getElementById('fabDeadline').onclick=()=>{fabGroup.classList.remove('open');openDlModal();};
+document.getElementById('toggleDl').onclick=()=>{DATA.dlVisible=!DATA.dlVisible;save();render();};
+
+/* ════ EXPORT / IMPORT ════ */
+document.getElementById('exportBtn').onclick=()=>{
+  const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='wtodo-'+todayStr()+'.json';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('書き出しました');
+};
+document.getElementById('importBtn').onclick=()=>{document.getElementById('importFile').click();};
+document.getElementById('importFile').addEventListener('change',e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const imported=JSON.parse(ev.target.result);
+      if(!imported||typeof imported!=='object'||!imported.tasks){
+        toast('無効なファイルです');return;
+      }
+      if(!confirm('現在のデータを上書きして読み込みますか?')) return;
+      DATA=Object.assign(init(),imported);
+      save();render();
+      toast('読み込みました');
+    }catch(err){
+      toast('読み込みに失敗しました');
+    }
+    e.target.value='';
+  };
+  reader.readAsText(file);
+});
+document.getElementById('prev').onclick=()=>{offsetWeeks--;render();};
+document.getElementById('next').onclick=()=>{offsetWeeks++;render();};
+document.getElementById('goToday').onclick=()=>{offsetWeeks=0;render();};
+
+/* shortcuts */
+document.addEventListener('keydown',e=>{
+  const tag=document.activeElement.tagName;
+  if(document.getElementById('dlOverlay').classList.contains('open')) return;
+  if(document.getElementById('recurOverlay').classList.contains('open')) return;
+  if(tag!=='INPUT'&&tag!=='TEXTAREA'){
+    if(e.key==='n'||e.key==='N'){const inp=document.querySelector('.add-inp[data-key="'+todayStr()+'"]');if(inp){inp.closest('.day-card').classList.remove('collapsed');inp.focus();}}
+    if(e.key==='d'||e.key==='D') openDlModal();
+    if(e.key==='?') document.getElementById('hints').classList.toggle('visible');
+    if(e.key==='ArrowLeft'){offsetWeeks--;render();}
+    if(e.key==='ArrowRight'){offsetWeeks++;render();}
+  }
+  if(e.key==='Escape'){fabGroup.classList.remove('open');document.getElementById('hints').classList.remove('visible');}
+});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#fabGroup')) fabGroup.classList.remove('open');
+  if(!e.target.closest('#fab')&&!e.target.closest('#hints')) document.getElementById('hints').classList.remove('visible');
+});
+
+let toastTimer;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2200);}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+render();
+</script>
+</body>
+</html>
