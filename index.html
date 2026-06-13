@@ -77,6 +77,41 @@ header{display:flex;align-items:center;gap:8px;padding:12px 12px 10px;border-bot
 .dl-chip.done-chip .dl-chip-text{text-decoration:line-through;color:var(--text-done)}
 .dl-chip-badge{font-family:var(--mono);font-size:.6rem;color:var(--text-sub)}
 
+/* ── period list ── */
+.pd-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;overflow:hidden}
+.pd-empty{font-size:.78rem;color:var(--text-sub);padding:8px 4px 10px}
+.pd-item{display:flex;flex-direction:column;gap:6px;padding:9px 8px 9px 12px;border-bottom:1px solid var(--border);transition:background .12s}
+.pd-item:last-child{border-bottom:none}
+.pd-item:hover{background:var(--surface2)}
+.pd-item.done-pd .pd-text{text-decoration:line-through;color:var(--text-done)}
+.pd-item.done-pd .pd-bar-fill{opacity:.3}
+.pd-row{display:flex;align-items:center;gap:6px}
+.pd-text{flex:1;font-size:.84rem;line-height:1.4;word-break:break-all;cursor:pointer}
+.pd-badge{font-family:var(--mono);font-size:.6rem;border-radius:3px;padding:2px 6px;white-space:nowrap;flex-shrink:0;border:1px solid}
+.pd-badge.upcoming{color:var(--text-sub);border-color:var(--border2)}
+.pd-badge.active{color:var(--accent);border-color:var(--accent-dim);background:rgba(126,232,162,.08)}
+.pd-badge.today-due{color:var(--danger);border-color:var(--danger);background:rgba(255,85,85,.1)}
+.pd-badge.overdue{color:var(--danger);border-color:var(--danger);background:rgba(255,85,85,.1)}
+.pd-badge.done{color:var(--text-sub);border-color:var(--border2);opacity:.6}
+.pd-bar{height:3px;background:var(--border2);border-radius:2px;overflow:hidden;margin-left:21px}
+.pd-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s}
+.pd-bar-fill.overdue{background:var(--danger)}
+.pd-range{font-family:var(--mono);font-size:.62rem;color:var(--text-sub);margin-left:21px}
+.pd-edit{background:none;border:none;color:var(--text-sub);font-size:.78rem;cursor:pointer;padding:6px 4px;transition:color .15s;flex-shrink:0;opacity:.5}
+.pd-edit:active{color:var(--accent);opacity:1}
+.pd-del{background:none;border:none;color:var(--text-sub);font-size:.78rem;cursor:pointer;padding:6px 4px;transition:color .15s;flex-shrink:0;opacity:.5}
+.pd-del:active{color:var(--danger);opacity:1}
+
+/* period chip in day */
+.pd-chip{display:flex;align-items:center;gap:7px;padding:6px 10px 6px 12px;border-top:1px solid var(--border)}
+.pd-chip-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;background:var(--accent)}
+.pd-chip.overdue .pd-chip-dot{background:var(--danger)}
+.pd-chip.today-due .pd-chip-dot{background:var(--danger)}
+.pd-chip.upcoming .pd-chip-dot{background:var(--text-sub)}
+.pd-chip-text{flex:1;font-size:.78rem;color:var(--text-sub);word-break:break-all}
+.pd-chip.done-chip .pd-chip-text{text-decoration:line-through;color:var(--text-done)}
+.pd-chip-badge{font-family:var(--mono);font-size:.6rem;color:var(--text-sub);white-space:nowrap}
+
 /* ── day cards ── */
 .day-card{margin-bottom:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color .15s}
 .day-card.drag-over{border-color:var(--accent)}
@@ -218,8 +253,32 @@ header{display:flex;align-items:center;gap:8px;padding:12px 12px 10px;border-bot
   </div>
 </div>
 
+<!-- period task add/edit modal -->
+<div class="overlay" id="pdOverlay">
+  <div class="modal">
+    <div class="modal-title" id="pdModalTitle">期間タスクを追加</div>
+    <div class="modal-field">
+      <label class="modal-label">タスク内容</label>
+      <input class="modal-inp" id="pdText" placeholder="例：企画書を作成する" maxlength="120" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">開始日</label>
+      <input class="modal-inp" type="date" id="pdStart">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">終了日</label>
+      <input class="modal-inp" type="date" id="pdEnd">
+    </div>
+    <div class="modal-row">
+      <button class="modal-cancel" id="pdCancel">キャンセル</button>
+      <button class="modal-submit" id="pdSubmit">追加</button>
+    </div>
+  </div>
+</div>
+
 <div class="fab-group" id="fabGroup">
   <div class="fab-subs">
+    <button class="fab-sub-btn" id="fabPeriod">📆 期間タスクを設定</button>
     <button class="fab-sub-btn" id="fabDeadline">📅 締切を設定</button>
     <button class="fab-sub-btn" id="fabToday">＋ 今日に追加</button>
   </div>
@@ -229,6 +288,7 @@ header{display:flex;align-items:center;gap:8px;padding:12px 12px 10px;border-bot
   <kbd>✎</kbd> タップで編集<br>
   <kbd>n</kbd> 今日に追加<br>
   <kbd>d</kbd> 締切タスク追加<br>
+  <kbd>p</kbd> 期間タスク追加<br>
   <kbd>← →</kbd> 週移動<br>
   <kbd>?</kbd> ヘルプ
 </div>
@@ -237,8 +297,8 @@ header{display:flex;align-items:center;gap:8px;padding:12px 12px 10px;border-bot
 <script>
 const STORE='wtodo_v4';
 const DAY_LABELS=['日','月','火','水','木','金','土'];
-function load(){try{return JSON.parse(localStorage.getItem(STORE)||'null')||init()}catch{return init()}}
-function init(){return{tasks:{},deadlines:[],recurring:[],carried:{},streak:{lastDoneDate:'',count:0},dlVisible:true,dlShowDone:false}}
+function load(){try{return Object.assign(init(),JSON.parse(localStorage.getItem(STORE)||'null')||{})}catch{return init()}}
+function init(){return{tasks:{},deadlines:[],periods:[],recurring:[],carried:{},streak:{lastDoneDate:'',count:0},dlVisible:true,dlShowDone:false,pdShowDone:false}}
 function save(){localStorage.setItem(STORE,JSON.stringify(DATA))}
 let DATA=load();
 let offsetWeeks=0;
@@ -270,6 +330,32 @@ function dlLabel(dl){
   if(d===0) return '今日まで';
   if(d===1) return '明日まで';
   return 'あと'+d+'日';
+}
+
+/* period task helpers */
+function pdUrgency(pd){
+  if(pd.done) return 'done';
+  const s=daysUntil(pd.startDate), e=daysUntil(pd.endDate);
+  if(e<0) return 'overdue';
+  if(e===0) return 'today-due';
+  if(s>0) return 'upcoming';
+  return 'active';
+}
+function pdLabel(pd){
+  const u=pdUrgency(pd);
+  const e=daysUntil(pd.endDate);
+  if(u==='done') return '完了';
+  if(u==='overdue') return Math.abs(e)+'日超過';
+  if(u==='today-due') return '今日まで';
+  if(u==='upcoming') return daysUntil(pd.startDate)+'日後開始';
+  return 'あと'+e+'日';
+}
+function pdProgress(pd){
+  const start=parseDate(pd.startDate), end=parseDate(pd.endDate);
+  const total=Math.max(1,Math.round((end-start)/86400000)+1);
+  const elapsed=Math.round((today()-start)/86400000)+1;
+  const pct=Math.min(100,Math.max(0,Math.round(elapsed/total*100)));
+  return pct;
 }
 
 function injectRecurring(monday){
@@ -376,6 +462,33 @@ function render(){
     }
   }
 
+  /* period section */
+  if(DATA.dlVisible){
+    const pdTitleRow=document.createElement('div');
+    pdTitleRow.style.cssText='display:flex;align-items:center;gap:8px;margin-top:2px';
+    pdTitleRow.innerHTML='<span class="sec-title" style="flex:1;padding-bottom:5px">期間タスク</span>'
+      +'<button id="togglePdDone" style="background:none;border:none;color:var(--text-sub);font-size:.68rem;font-family:var(--mono);cursor:pointer;padding-bottom:5px">'
+      +(DATA.pdShowDone?'完了を隠す':'完了を表示')+'</button>';
+    body.appendChild(pdTitleRow);
+    pdTitleRow.querySelector('#togglePdDone').onclick=()=>{DATA.pdShowDone=!DATA.pdShowDone;save();render();};
+
+    const activePd=DATA.periods.filter(p=>!p.done).sort((a,b)=>a.endDate.localeCompare(b.endDate));
+    const donePd=DATA.periods.filter(p=>p.done).sort((a,b)=>a.endDate.localeCompare(b.endDate));
+    const pdList=[...activePd,...(DATA.pdShowDone?donePd:[])];
+
+    if(pdList.length===0){
+      const em=document.createElement('div');
+      em.className='pd-empty';
+      em.textContent='期間タスクなし — 📆 で追加';
+      body.appendChild(em);
+    } else {
+      const pdCard=document.createElement('div');
+      pdCard.className='pd-card';
+      for(const pd of pdList) pdCard.appendChild(makePeriodItem(pd,mon,sun));
+      body.appendChild(pdCard);
+    }
+  }
+
   /* week title */
   const wt=document.createElement('div');
   wt.className='sec-title';wt.style.marginTop='10px';wt.textContent='今週のタスク';
@@ -389,15 +502,17 @@ function render(){
     const isToday=key===todayStr();
     const doneCnt=tasks.filter(t=>t.done).length;
     const dlsDay=DATA.deadlines.filter(dl=>dl.dueDate===key);
+    const pdsDay=DATA.periods.filter(pd=>key>=pd.startDate&&key<=pd.endDate);
 
     const card=document.createElement('div');
     card.className='day-card'+(isToday?' is-today':'');
     card.dataset.key=key;
-    if(!isToday&&tasks.length===0&&dlsDay.length===0) card.classList.add('collapsed');
+    if(!isToday&&tasks.length===0&&dlsDay.length===0&&pdsDay.length===0) card.classList.add('collapsed');
 
     const urgentDl=dlsDay.find(dl=>!dl.done&&daysUntil(dl.dueDate)<=0);
     const anyDl=dlsDay.find(dl=>!dl.done);
-    const dot=anyDl?'<span style="width:5px;height:5px;border-radius:50%;background:'+(urgentDl?'var(--danger)':'var(--warn)')+';flex-shrink:0;display:inline-block"></span>':'';
+    const anyPd=pdsDay.find(pd=>!pd.done);
+    const dot=(anyDl||anyPd)?'<span style="width:5px;height:5px;border-radius:50%;background:'+(urgentDl?'var(--danger)':(anyDl?'var(--warn)':'var(--accent)'))+';flex-shrink:0;display:inline-block"></span>':'';
 
     const head=document.createElement('div');
     head.className='day-head';
@@ -419,6 +534,17 @@ function render(){
       chip.innerHTML='<span class="dl-chip-dot"></span>'
         +'<span class="dl-chip-text">'+esc(dl.text)+'</span>'
         +'<span class="dl-chip-badge">'+dlLabel(dl)+'</span>';
+      ul.appendChild(chip);
+    }
+    for(const pd of pdsDay){
+      const u=pdUrgency(pd);
+      const isStart=key===pd.startDate, isEnd=key===pd.endDate;
+      const marker=isStart?'開始 ':(isEnd?'終了 ':'継続 ');
+      const chip=document.createElement('div');
+      chip.className='pd-chip '+u+(pd.done?' done-chip':'');
+      chip.innerHTML='<span class="pd-chip-dot"></span>'
+        +'<span class="pd-chip-text">'+marker+esc(pd.text)+'</span>'
+        +'<span class="pd-chip-badge">'+pdLabel(pd)+'</span>';
       ul.appendChild(chip);
     }
 
@@ -502,6 +628,75 @@ function makeDlItem(dl,mon,sun){
     save();render();toast(fmtShort(due)+'の週へ移動');
   };
   delBtn.onclick=()=>{DATA.deadlines=DATA.deadlines.filter(x=>x.id!==dl.id);save();render();};
+  return div;
+}
+
+/* ════ PERIOD ITEM ════ */
+function makePeriodItem(pd,mon,sun){
+  const u=pdUrgency(pd);
+  const start=parseDate(pd.startDate), end=parseDate(pd.endDate);
+  const inWeek=(start<=sun&&end>=mon);
+  const div=document.createElement('div');
+  div.className='pd-item'+(pd.done?' done-pd':'');
+
+  const row=document.createElement('div');
+  row.className='pd-row';
+
+  const cb=document.createElement('input');
+  cb.type='checkbox';cb.className='dl-cb';if(pd.done) cb.checked=true;
+
+  const textSpan=document.createElement('span');
+  textSpan.className='pd-text';
+  textSpan.textContent=pd.text;
+  textSpan.onclick=()=>{pd.done=!pd.done;save();render();};
+
+  const badge=document.createElement('span');
+  badge.className='pd-badge '+u;
+  badge.textContent=pdLabel(pd);
+
+  const editBtn=document.createElement('button');
+  editBtn.className='pd-edit';editBtn.title='編集';editBtn.textContent='✎';
+  editBtn.onclick=()=>openPdModal(pd.id);
+
+  const gotoBtn=document.createElement('button');
+  gotoBtn.className='dl-goto';gotoBtn.title='その週へ';gotoBtn.textContent='→';
+  if(!inWeek){
+    gotoBtn.style.visibility='hidden';
+  } else {
+    gotoBtn.onclick=()=>{
+      const cur=addDays(getMon(today()),offsetWeeks*7);
+      offsetWeeks=Math.round((getMon(start)-cur)/604800000);
+      save();render();toast(fmtShort(start)+'の週へ移動');
+    };
+  }
+
+  const delBtn=document.createElement('button');
+  delBtn.className='pd-del';delBtn.textContent='✕';
+  delBtn.onclick=()=>{DATA.periods=DATA.periods.filter(x=>x.id!==pd.id);save();render();};
+
+  cb.onchange=e=>{pd.done=e.target.checked;save();render();};
+
+  row.appendChild(cb);
+  row.appendChild(textSpan);
+  row.appendChild(badge);
+  row.appendChild(editBtn);
+  row.appendChild(gotoBtn);
+  row.appendChild(delBtn);
+  div.appendChild(row);
+
+  const range=document.createElement('div');
+  range.className='pd-range';
+  range.textContent=fmtShort(start)+' 〜 '+fmtShort(end);
+  div.appendChild(range);
+
+  const bar=document.createElement('div');
+  bar.className='pd-bar';
+  const fill=document.createElement('div');
+  fill.className='pd-bar-fill'+(u==='overdue'?' overdue':'');
+  fill.style.width=pdProgress(pd)+'%';
+  bar.appendChild(fill);
+  div.appendChild(bar);
+
   return div;
 }
 
@@ -614,6 +809,49 @@ document.getElementById('dlSubmit').onclick=()=>{
 document.getElementById('dlText').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('dlDate').focus();}});
 document.getElementById('dlDate').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('dlSubmit').click();}});
 
+/* ════ PERIOD MODAL (add/edit) ════ */
+let pdEditId=null;
+function openPdModal(editId){
+  pdEditId=editId||null;
+  const isEdit=!!pdEditId;
+  document.getElementById('pdModalTitle').textContent=isEdit?'期間タスクを編集':'期間タスクを追加';
+  document.getElementById('pdSubmit').textContent=isEdit?'保存':'追加';
+  if(isEdit){
+    const pd=DATA.periods.find(p=>p.id===pdEditId);
+    document.getElementById('pdText').value=pd.text;
+    document.getElementById('pdStart').value=pd.startDate;
+    document.getElementById('pdEnd').value=pd.endDate;
+  } else {
+    document.getElementById('pdText').value='';
+    document.getElementById('pdStart').value=todayStr();
+    document.getElementById('pdEnd').value=todayStr();
+  }
+  document.getElementById('pdOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('pdText').focus(),80);
+}
+function closePdModal(){document.getElementById('pdOverlay').classList.remove('open');pdEditId=null;}
+document.getElementById('pdCancel').onclick=closePdModal;
+document.getElementById('pdOverlay').onclick=e=>{if(e.target===e.currentTarget)closePdModal()};
+document.getElementById('pdSubmit').onclick=()=>{
+  const text=document.getElementById('pdText').value.trim();
+  const start=document.getElementById('pdStart').value;
+  const end=document.getElementById('pdEnd').value;
+  if(!text||!start||!end){toast('すべての項目を入力してください');return;}
+  if(end<start){toast('終了日は開始日以降にしてください');return;}
+  if(pdEditId){
+    const pd=DATA.periods.find(p=>p.id===pdEditId);
+    if(pd){pd.text=text;pd.startDate=start;pd.endDate=end;}
+    toast('更新しました');
+  } else {
+    DATA.periods.push({id:uid(),text,startDate:start,endDate:end,done:false});
+    toast('期間タスクを追加しました');
+  }
+  save();closePdModal();render();
+};
+document.getElementById('pdText').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('pdStart').focus();}});
+document.getElementById('pdStart').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('pdEnd').focus();}});
+document.getElementById('pdEnd').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('pdSubmit').click();}});
+
 /* ════ RECUR EDIT MODAL ════ */
 let recurEditId=null;
 function openRecurModal(recId){
@@ -666,6 +904,7 @@ document.getElementById('fabToday').onclick=()=>{
   });
 };
 document.getElementById('fabDeadline').onclick=()=>{fabGroup.classList.remove('open');openDlModal();};
+document.getElementById('fabPeriod').onclick=()=>{fabGroup.classList.remove('open');openPdModal();};
 document.getElementById('toggleDl').onclick=()=>{DATA.dlVisible=!DATA.dlVisible;save();render();};
 
 /* ════ EXPORT / IMPORT ════ */
@@ -710,10 +949,12 @@ document.getElementById('goToday').onclick=()=>{offsetWeeks=0;render();};
 document.addEventListener('keydown',e=>{
   const tag=document.activeElement.tagName;
   if(document.getElementById('dlOverlay').classList.contains('open')) return;
+  if(document.getElementById('pdOverlay').classList.contains('open')) return;
   if(document.getElementById('recurOverlay').classList.contains('open')) return;
   if(tag!=='INPUT'&&tag!=='TEXTAREA'){
     if(e.key==='n'||e.key==='N'){const inp=document.querySelector('.add-inp[data-key="'+todayStr()+'"]');if(inp){inp.closest('.day-card').classList.remove('collapsed');inp.focus();}}
     if(e.key==='d'||e.key==='D') openDlModal();
+    if(e.key==='p'||e.key==='P') openPdModal();
     if(e.key==='?') document.getElementById('hints').classList.toggle('visible');
     if(e.key==='ArrowLeft'){offsetWeeks--;render();}
     if(e.key==='ArrowRight'){offsetWeeks++;render();}
