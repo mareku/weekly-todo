@@ -34,7 +34,40 @@ header{display:flex;align-items:center;gap:8px;padding:12px 12px 10px;border-bot
 .stats-label{font-family:var(--mono);font-size:.8rem;color:var(--text-sub);white-space:nowrap}
 .streak{font-family:var(--mono);font-size:.8rem;color:var(--text-sub);white-space:nowrap}
 .streak b{color:var(--accent)}
-.body{flex:1;overflow-y:auto;padding:10px 12px 80px}
+.body{flex:1;overflow-y:auto;padding:10px 12px 140px}
+
+/* ── bottom nav ── */
+.bottom-nav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:680px;
+  background:var(--surface);border-top:1px solid var(--border);
+  display:flex;align-items:stretch;
+  z-index:150;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.bnav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:8px 4px 7px;
+  background:none;border:none;color:var(--text-sub);
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;
+  cursor:pointer;transition:color .15s;position:relative;
+  -webkit-tap-highlight-color:transparent;
+}
+.bnav-item:active{color:var(--accent)}
+.bnav-item.active{color:var(--accent)}
+.bnav-item.active::before{
+  content:'';position:absolute;top:0;left:20%;right:20%;
+  height:2px;background:var(--accent);border-radius:0 0 2px 2px;
+}
+.bnav-badge{
+  position:absolute;top:6px;right:calc(50% - 18px);
+  background:var(--danger);color:#fff;
+  font-family:var(--mono);font-size:.55rem;font-weight:600;
+  border-radius:8px;padding:0 4px;min-width:14px;text-align:center;
+  line-height:14px;display:none;
+}
+.bnav-badge.show{display:block}
+
 .sec-title{font-family:var(--mono);font-size:1.05rem;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase;padding:6px 2px 5px}
 .carry-banner{background:var(--accent-dim);border:1px solid var(--accent);border-radius:var(--r);padding:9px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;font-size:1.05rem;color:var(--accent)}
 .carry-banner span{flex:1}
@@ -178,20 +211,61 @@ header{display:flex;align-items:center;gap:8px;padding:12px 12px 10px;border-bot
 .day-check-label.checked{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
 
 /* fab */
-.fab-group{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;align-items:flex-end;gap:10px;z-index:200}
+.fab-group{position:fixed;bottom:72px;right:24px;display:flex;flex-direction:column;align-items:flex-end;gap:10px;z-index:200}
 .fab{width:52px;height:52px;border-radius:50%;background:var(--accent);color:#0D0D0D;border:none;font-size:1.6rem;cursor:pointer;box-shadow:0 4px 20px rgba(126,232,162,.25);display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
 .fab:hover{transform:scale(1.08)}
 .fab-subs{display:flex;flex-direction:column;align-items:flex-end;gap:6px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;transform:translateY(8px)}
 .fab-group.open .fab-subs{opacity:1;pointer-events:auto;transform:translateY(0)}
 .fab-sub-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:20px;padding:6px 14px;font-size:1.05rem;cursor:pointer;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:6px}
 .fab-sub-btn:hover{border-color:var(--accent);color:var(--accent)}
-.shortcuts{position:fixed;bottom:84px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px;font-family:var(--mono);font-size:1.05rem;color:var(--text-sub);line-height:1.8;z-index:199;display:none;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.shortcuts{position:fixed;bottom:130px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px;font-family:var(--mono);font-size:1.05rem;color:var(--text-sub);line-height:1.8;z-index:199;display:none;box-shadow:0 4px 16px rgba(0,0,0,.5)}
 .shortcuts.visible{display:block}
 .shortcuts kbd{background:var(--surface2);border:1px solid var(--border2);border-radius:3px;padding:0 4px;color:var(--text)}
-.toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:7px 14px;font-size:1.05rem;color:var(--text);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:300;white-space:nowrap}
+.toast{position:fixed;bottom:130px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:7px 14px;font-size:1.05rem;color:var(--text);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:300;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ── Itshover SVGs ── */
+/* ── freq task sections ── */
+.freq-sections{display:flex;flex-direction:column;gap:10px;margin-bottom:4px}
+.freq-sec{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.freq-sec-head{display:flex;align-items:center;gap:8px;padding:8px 10px 8px 12px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+.freq-sec-title{font-family:var(--mono);font-size:.78rem;font-weight:600;color:var(--text-sub);letter-spacing:.08em;flex:1}
+.freq-sec-badge{font-family:var(--mono);font-size:.68rem;color:var(--text-sub);background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:1px 6px}
+.freq-sec.collapsed .freq-sec-body{display:none}
+.freq-sec.collapsed .freq-collapse{transform:rotate(-90deg)}
+.freq-collapse{transition:transform .2s;color:var(--text-sub)}
+.freq-sec-body{padding:4px 0}
+.freq-empty{font-size:.85rem;color:var(--text-sub);padding:10px 12px}
+
+/* freq item */
+.freq-item{display:flex;flex-direction:column;gap:5px;padding:10px 10px 10px 12px;border-bottom:1px solid var(--border)}
+.freq-item:last-child{border-bottom:none}
+.freq-row{display:flex;align-items:center;gap:8px}
+.freq-text{flex:1;font-size:.94rem;line-height:1.4;word-break:break-all;color:var(--text)}
+.freq-counter{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.freq-count{font-family:var(--mono);font-size:.94rem;color:var(--text-sub);min-width:44px;text-align:right}
+.freq-count.achieved{color:var(--accent)}
+.freq-count.exceeded{color:var(--accent);font-weight:600}
+.freq-tap-btn{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:8px;padding:6px 12px;
+  font-family:var(--mono);font-size:.88rem;font-weight:600;color:var(--text);
+  cursor:pointer;transition:all .15s;min-width:44px;text-align:center;
+  user-select:none;-webkit-user-select:none;
+}
+.freq-tap-btn.achieved{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.freq-tap-btn.exceeded{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.freq-tap-btn:active{transform:scale(.92)}
+.freq-edit{background:none;border:none;color:var(--text-sub);cursor:pointer;padding:6px 4px;opacity:.5;flex-shrink:0}
+.freq-edit:active{color:var(--accent);opacity:1}
+.freq-del{background:none;border:none;color:var(--text-sub);cursor:pointer;padding:6px 4px;opacity:.5;flex-shrink:0}
+.freq-del:active{color:var(--danger);opacity:1}
+.freq-bar-row{display:flex;align-items:center;gap:6px;padding:0 0 2px}
+.freq-bar{flex:1;height:3px;background:var(--border2);border-radius:2px;overflow:visible;position:relative}
+.freq-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s;max-width:100%}
+.freq-bar-fill.exceeded-fill{background:var(--accent);box-shadow:0 0 6px rgba(126,232,162,.4)}
+.freq-bar-over{position:absolute;top:0;left:100%;height:100%;background:rgba(126,232,162,.35);border-radius:0 2px 2px 0}
+.freq-target-label{font-family:var(--mono);font-size:.65rem;color:var(--text-sub);white-space:nowrap;flex-shrink:0}
+
 .ih-icon{display:inline-block;flex-shrink:0;vertical-align:middle;pointer-events:none;transition:transform .2s,stroke .2s}
 button:active .ih-icon{transform:scale(.88)}
 /* trash: lid opens on parent:active */
@@ -301,8 +375,59 @@ button:active .ih-upload .arrow{transform:translateY(-2px)}
   </div>
 </div>
 
+<!-- freq task add/edit modal -->
+<div class="overlay" id="freqOverlay">
+  <div class="modal">
+    <div class="modal-title" id="freqModalTitle">回数タスクを追加</div>
+    <div class="modal-field">
+      <label class="modal-label">タスク内容</label>
+      <input class="modal-inp" id="freqText" placeholder="例：筋トレ" maxlength="120" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">種別</label>
+      <div style="display:flex;gap:8px">
+        <label class="day-check-label" id="freqTypeW"><input type="radio" name="freqType" value="weekly" checked> 週次</label>
+        <label class="day-check-label" id="freqTypeM"><input type="radio" name="freqType" value="monthly"> 月次</label>
+        <label class="day-check-label" id="freqTypeY"><input type="radio" name="freqType" value="yearly"> 年次</label>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">目標回数</label>
+      <input class="modal-inp" type="number" id="freqTarget" min="1" max="9999" value="3" style="width:100%">
+    </div>
+    <div class="modal-row">
+      <button class="modal-cancel" id="freqCancel">キャンセル</button>
+      <button class="modal-submit" id="freqSubmit">追加</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav" id="bottomNav">
+  <button class="bnav-item active" data-section="freq" id="bnav-freq">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v-3a3 3 0 0 1 3 -3h13m-3 -3l3 3l-3 3"/><path d="M20 12v3a3 3 0 0 1 -3 3h-13m3 3l-3 -3l3 -3"/></svg>
+    <span>回数</span>
+    <span class="bnav-badge" id="badge-freq"></span>
+  </button>
+  <button class="bnav-item" data-section="deadline" id="bnav-deadline">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M12 7l0 5l3 3"/></svg>
+    <span>締切</span>
+    <span class="bnav-badge" id="badge-deadline"></span>
+  </button>
+  <button class="bnav-item" data-section="period" id="bnav-period">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/><path d="M16 3l0 4"/><path d="M8 3l0 4"/><path d="M4 11l16 0"/><path d="M8 15h2"/><path d="M14 15h2"/></svg>
+    <span>期間</span>
+    <span class="bnav-badge" id="badge-period"></span>
+  </button>
+  <button class="bnav-item" data-section="week" id="bnav-week">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l11 0"/><path d="M9 12l11 0"/><path d="M9 18l11 0"/><path d="M5 6l0 .01"/><path d="M5 12l0 .01"/><path d="M5 18l0 .01"/></svg>
+    <span>今週</span>
+    <span class="bnav-badge" id="badge-week"></span>
+  </button>
+</nav>
+
 <div class="fab-group" id="fabGroup">
   <div class="fab-subs">
+    <button class="fab-sub-btn" id="fabFreq"><svg class="ih-icon ih-repeat" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v-3a3 3 0 0 1 3 -3h13m-3 -3l3 3l-3 3" fill="none"/><path d="M20 12v3a3 3 0 0 1 -3 3h-13m3 3l-3 -3l3 -3" fill="none"/></svg> 回数タスク</button>
     <button class="fab-sub-btn" id="fabPeriod"><svg class="ih-icon ih-calendar" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" fill="none"/><path d="M16 3l0 4" fill="none"/><path d="M8 3l0 4" fill="none"/><path d="M4 11l16 0" fill="none"/><path d="M8 15h2" fill="none"/><path d="M14 15h2" fill="none"/></svg> 期間タスク</button>
     <button class="fab-sub-btn" id="fabDeadline"><svg class="ih-icon ih-clock" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" fill="none"/><path class="hands" d="M12 7l0 5l3 3" fill="none"/></svg> 締切を設定</button>
     <button class="fab-sub-btn" id="fabToday"><svg class="ih-icon ih-plus" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14" fill="none"/><path d="M5 12l14 0" fill="none"/></svg> 今日に追加</button>
@@ -320,28 +445,62 @@ button:active .ih-upload .arrow{transform:translateY(-2px)}
 <div class="toast" id="toast"></div>
 
 <script>
-const STORE='wtodo_v4';
-const DAY_LABELS=['日','月','火','水','木','金','土'];
-function load(){try{return Object.assign(init(),JSON.parse(localStorage.getItem(STORE)||'null')||{})}catch{return init()}}
-function init(){return{tasks:{},deadlines:[],periods:[],recurring:[],carried:{},streak:{lastDoneDate:'',count:0},dlVisible:true,dlShowDone:false,pdShowDone:false}}
-function save(){localStorage.setItem(STORE,JSON.stringify(DATA))}
-let DATA=load();
-let offsetWeeks=0;
+// ══ CONSTANTS ════════════════════════════════════════════════════════════════
 
-/* dates */
-function today(){const d=new Date();d.setHours(0,0,0,0);return d}
-function todayStr(){return ds(today())}
-function ds(d){return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())}
-function p(n){return String(n).padStart(2,'0')}
-function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r}
-function getMon(d){const r=new Date(d);r.setHours(0,0,0,0);const day=r.getDay();r.setDate(r.getDate()+(day===0?-6:1-day));return r}
-function fmtShort(d){return(d.getMonth()+1)+'/'+d.getDate()}
-function weekKey(mon){return ds(mon)}
-function uid(){return Math.random().toString(36).slice(2,9)}
-function parseDate(str){const p=str.split('-').map(Number);const r=new Date(p[0],p[1]-1,p[2]);r.setHours(0,0,0,0);return r}
-function daysUntil(s){return Math.round((parseDate(s)-today())/86400000)}
+const STORE = 'wtodo_v4';
+const DAY_LABELS = ['日','月','火','水','木','金','土'];
+const FREQ_TYPES = ['weekly','monthly','yearly'];
+const FREQ_TITLES = {weekly:'週次タスク', monthly:'月次タスク', yearly:'年次タスク'};
 
-function dlUrgency(dl){
+const ICONS = {
+  pen:    '<svg class="ih-icon ih-pen" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.502 5.093a2.073 2.073 0 1 1 2.93 2.927l-9.483 9.483-3.95 1.023 1.022-3.95z" fill="none"/></svg>',
+  trash:  '<svg class="ih-icon ih-trash" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path class="lid-lower" d="M4 7l16 0" fill="none"/><path d="M10 11l0 6" fill="none"/><path d="M14 11l0 6" fill="none"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" fill="none"/><path class="lid-upper" d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" fill="none"/></svg>',
+  repeat: '<svg class="ih-icon ih-repeat" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v-3a3 3 0 0 1 3 -3h13m-3 -3l3 3l-3 3" fill="none"/><path d="M20 12v3a3 3 0 0 1 -3 3h-13m3 3l-3 -3l3 -3" fill="none"/></svg>',
+  arrow:  '<svg class="ih-icon ih-arrow-right" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l14 0" fill="none"/><path d="M15 16l4 -4l-4 -4" fill="none"/></svg>',
+  chevDown: '<svg class="ih-icon ih-chevron-down" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6" fill="none"/></svg>',
+  chevDownSm: '<svg class="ih-icon ih-chevron-down freq-collapse" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6" fill="none"/></svg>',
+  x:      '<svg class="ih-icon ih-x" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-12 12" fill="none"/><path d="M6 6l12 12" fill="none"/></svg>',
+  repeatRow: '<svg class="ih-icon ih-repeat" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v-3a3 3 0 0 1 3 -3h13m-3 -3l3 3l-3 3" fill="none"/><path d="M20 12v3a3 3 0 0 1 -3 3h-13m3 3l-3 -3l3 -3" fill="none"/></svg>',
+  arrowRow: '<svg class="ih-icon ih-arrow-right" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l14 0" fill="none"/><path d="M15 16l4 -4l-4 -4" fill="none"/></svg>',
+};
+
+// ══ DATA / STORAGE ════════════════════════════════════════════════════════════
+
+function init() {
+  return {
+    tasks: {}, deadlines: [], periods: [], freqTasks: [], recurring: [],
+    carried: {}, streak: {lastDoneDate:'', count:0},
+    dlVisible: true, dlShowDone: false, pdShowDone: false,
+  };
+}
+function load() {
+  try { return Object.assign(init(), JSON.parse(localStorage.getItem(STORE)||'null')||{}); }
+  catch { return init(); }
+}
+function save() { localStorage.setItem(STORE, JSON.stringify(DATA)); }
+
+let DATA = load();
+let offsetWeeks = 0;
+
+// ══ DATE HELPERS ══════════════════════════════════════════════════════════════
+
+function today()    { const d=new Date(); d.setHours(0,0,0,0); return d; }
+function todayStr() { return ds(today()); }
+function ds(d)      { return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function p(n)       { return String(n).padStart(2,'0'); }
+function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function getMon(d)  { const r=new Date(d); r.setHours(0,0,0,0); const day=r.getDay(); r.setDate(r.getDate()+(day===0?-6:1-day)); return r; }
+function fmtShort(d){ return (d.getMonth()+1)+'/'+d.getDate(); }
+function weekKey(mon){ return ds(mon); }
+function uid()      { return Math.random().toString(36).slice(2,9); }
+function parseDate(str){ const q=str.split('-').map(Number); const r=new Date(q[0],q[1]-1,q[2]); r.setHours(0,0,0,0); return r; }
+function daysUntil(s){ return Math.round((parseDate(s)-today())/86400000); }
+function esc(s)     { return s.replace(/&/g,'\x26amp;').replace(/</g,'\x26lt;').replace(/>/g,'\x26gt;'); }
+
+// ══ DOMAIN HELPERS ════════════════════════════════════════════════════════════
+
+// -- deadline
+function dlUrgency(dl) {
   if(dl.done) return 'done';
   const d=daysUntil(dl.dueDate);
   if(d<0) return 'overdue';
@@ -349,7 +508,7 @@ function dlUrgency(dl){
   if(d<=3) return 'soon';
   return 'future';
 }
-function dlLabel(dl){
+function dlLabel(dl) {
   const d=daysUntil(dl.dueDate);
   if(d<0) return Math.abs(d)+'日超過';
   if(d===0) return '今日まで';
@@ -357,8 +516,8 @@ function dlLabel(dl){
   return 'あと'+d+'日';
 }
 
-/* period task helpers */
-function pdUrgency(pd){
+// -- period
+function pdUrgency(pd) {
   if(pd.done) return 'done';
   const s=daysUntil(pd.startDate), e=daysUntil(pd.endDate);
   if(e<0) return 'overdue';
@@ -366,28 +525,48 @@ function pdUrgency(pd){
   if(s>0) return 'upcoming';
   return 'active';
 }
-function pdLabel(pd){
-  const u=pdUrgency(pd);
-  const e=daysUntil(pd.endDate);
-  if(u==='done') return '完了';
-  if(u==='overdue') return Math.abs(e)+'日超過';
+function pdLabel(pd) {
+  const u=pdUrgency(pd), e=daysUntil(pd.endDate);
+  if(u==='done')      return '完了';
+  if(u==='overdue')   return Math.abs(e)+'日超過';
   if(u==='today-due') return '今日まで';
-  if(u==='upcoming') return daysUntil(pd.startDate)+'日後開始';
+  if(u==='upcoming')  return daysUntil(pd.startDate)+'日後開始';
   return 'あと'+e+'日';
 }
-function pdProgress(pd){
+function pdProgress(pd) {
   const start=parseDate(pd.startDate), end=parseDate(pd.endDate);
   const total=Math.max(1,Math.round((end-start)/86400000)+1);
   const elapsed=Math.round((today()-start)/86400000)+1;
-  const pct=Math.min(100,Math.max(0,Math.round(elapsed/total*100)));
-  return pct;
+  return Math.min(100,Math.max(0,Math.round(elapsed/total*100)));
 }
 
-function injectRecurring(monday){
+// -- freq
+function freqPeriodKey(type, d) {
+  d = d||today();
+  if(type==='weekly') {
+    const mon=getMon(d), y=mon.getFullYear();
+    const jan1=new Date(y,0,1);
+    const wk=Math.ceil(((mon-jan1)/86400000+jan1.getDay()+1)/7);
+    return y+'-W'+p(wk);
+  }
+  if(type==='monthly') return d.getFullYear()+'-'+p(d.getMonth()+1);
+  return String(d.getFullYear());
+}
+function freqGetCount(ft, key) { return (ft.logs&&ft.logs[key])||0; }
+function freqAddCount(ft, key, delta) {
+  if(!ft.logs) ft.logs={};
+  ft.logs[key]=Math.max(0,(ft.logs[key]||0)+delta);
+}
+function freqTypeLabel(type) {
+  return type==='weekly'?'週次':type==='monthly'?'月次':'年次';
+}
+
+// -- recurring
+function injectRecurring(monday) {
   const wk='_recur_'+weekKey(monday);
   if(DATA.carried[wk]) return;
-  for(const rec of DATA.recurring){
-    for(const dayIdx of rec.days){
+  for(const rec of DATA.recurring) {
+    for(const dayIdx of rec.days) {
       const offset=dayIdx===0?6:dayIdx-1;
       const d=addDays(monday,offset);
       const key=ds(d);
@@ -396,277 +575,361 @@ function injectRecurring(monday){
         DATA.tasks[key].push({id:uid(),text:rec.text,done:false,recurId:rec.id});
     }
   }
-  DATA.carried[wk]=true;save();
+  DATA.carried[wk]=true; save();
 }
 
-function updateStreak(){
-  const td=todayStr(),tasks=DATA.tasks[td]||[];
-  if(tasks.length>0&&tasks.every(t=>t.done)&&DATA.streak.lastDoneDate!==td){
+// -- streak
+function updateStreak() {
+  const td=todayStr(), tasks=DATA.tasks[td]||[];
+  if(tasks.length>0 && tasks.every(t=>t.done) && DATA.streak.lastDoneDate!==td) {
     const yest=ds(addDays(today(),-1));
-    DATA.streak.count=(DATA.streak.lastDoneDate===yest)?DATA.streak.count+1:1;
-    DATA.streak.lastDoneDate=td;save();
+    DATA.streak.count = (DATA.streak.lastDoneDate===yest) ? DATA.streak.count+1 : 1;
+    DATA.streak.lastDoneDate=td; save();
   }
 }
 
-/* ════ RENDER ════ */
-function render(){
-  const mon=addDays(getMon(today()),offsetWeeks*7);
+// ══ RENDER: TOP LEVEL ═════════════════════════════════════════════════════════
+
+function render() {
+  const mon=addDays(getMon(today()), offsetWeeks*7);
   const sun=addDays(mon,6);
+
+  // header
   document.getElementById('wrange').textContent=fmtShort(mon)+'–'+fmtShort(sun);
   document.getElementById('prev').disabled=offsetWeeks<=-12;
   document.getElementById('next').disabled=offsetWeeks>=52;
+  document.getElementById('toggleDl').classList.toggle('active', DATA.dlVisible);
+
   injectRecurring(mon);
 
-  const wk=weekKey(mon);
-  const prevMon=addDays(mon,-7);
-  let carryTasks=[];
-  if(!DATA.carried['carry_'+wk]){
-    for(let i=0;i<7;i++){
-      for(const t of(DATA.tasks[ds(addDays(prevMon,i))]||[]))
-        if(!t.done) carryTasks.push({...t});
-    }
-  }
-
-  let total=0,done=0;
-  for(let i=0;i<7;i++){
+  // stats
+  let total=0, done=0;
+  for(let i=0;i<7;i++) {
     const tl=DATA.tasks[ds(addDays(mon,i))]||[];
-    total+=tl.length;done+=tl.filter(t=>t.done).length;
+    total+=tl.length; done+=tl.filter(t=>t.done).length;
   }
-  const pct=total?Math.round(done/total*100):0;
-  document.getElementById('pfill').style.width=pct+'%';
+  document.getElementById('pfill').style.width=(total?Math.round(done/total*100):0)+'%';
   document.getElementById('slabel').textContent=done+'/'+total;
   updateStreak();
   const sc=DATA.streak.count;
   document.getElementById('streak').innerHTML=sc>=2?'🔥 <b>'+sc+'</b>日連続':'';
-  document.getElementById('toggleDl').classList.toggle('active',DATA.dlVisible);
 
+  // body
   const body=document.getElementById('body');
   body.innerHTML='';
-
-  /* carry banner */
-  if(carryTasks.length>0){
-    const b=document.createElement('div');
-    b.className='carry-banner';
-    b.innerHTML='<span>⏩ 前週の未完了 <b style="color:var(--accent)">'+carryTasks.length+'</b> 件</span>'
-      +'<button class="carry-btn" id="doCarry">月曜に追加</button>'
-      +'<button class="carry-dismiss" id="dismissCarry"><svg class="ih-icon ih-x" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-12 12" fill="none"/><path d="M6 6l12 12" fill="none"/></svg></button>';
-    body.appendChild(b);
-    b.querySelector('#doCarry').onclick=()=>{
-      const mk=ds(mon);
-      if(!DATA.tasks[mk]) DATA.tasks[mk]=[];
-      for(const t of carryTasks) DATA.tasks[mk].push({id:uid(),text:t.text,done:false});
-      DATA.carried['carry_'+wk]=true;save();render();
-    };
-    b.querySelector('#dismissCarry').onclick=()=>{DATA.carried['carry_'+wk]=true;save();render();};
-  }
-
-  /* deadline section */
-  if(DATA.dlVisible){
-    const dlTitleRow=document.createElement('div');
-    dlTitleRow.style.cssText='display:flex;align-items:center;gap:8px;margin-top:2px';
-    dlTitleRow.innerHTML='<span class="sec-title" style="flex:1;padding-bottom:5px">締切タスク</span>'
-      +'<button id="toggleDlDone" style="background:none;border:none;color:var(--text-sub);font-size:.68rem;font-family:var(--mono);cursor:pointer;padding-bottom:5px">'
-      +(DATA.dlShowDone?'完了を隠す':'完了を表示')+'</button>';
-    body.appendChild(dlTitleRow);
-    dlTitleRow.querySelector('#toggleDlDone').onclick=()=>{DATA.dlShowDone=!DATA.dlShowDone;save();render();};
-
-    const active=DATA.deadlines.filter(d=>!d.done).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
-    const doneDl=DATA.deadlines.filter(d=>d.done).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
-    const list=[...active,...(DATA.dlShowDone?doneDl:[])];
-
-    if(list.length===0){
-      const em=document.createElement('div');
-      em.className='dl-empty';
-      em.textContent='締切タスクなし — 📅 で追加';
-      body.appendChild(em);
-    } else {
-      const dlCard=document.createElement('div');
-      dlCard.className='dl-card';
-      for(const dl of list) dlCard.appendChild(makeDlItem(dl,mon,sun));
-      body.appendChild(dlCard);
-    }
-  }
-
-  /* period section */
-  if(DATA.dlVisible){
-    const pdTitleRow=document.createElement('div');
-    pdTitleRow.style.cssText='display:flex;align-items:center;gap:8px;margin-top:2px';
-    pdTitleRow.innerHTML='<span class="sec-title" style="flex:1;padding-bottom:5px">期間タスク</span>'
-      +'<button id="togglePdDone" style="background:none;border:none;color:var(--text-sub);font-size:.68rem;font-family:var(--mono);cursor:pointer;padding-bottom:5px">'
-      +(DATA.pdShowDone?'完了を隠す':'完了を表示')+'</button>';
-    body.appendChild(pdTitleRow);
-    pdTitleRow.querySelector('#togglePdDone').onclick=()=>{DATA.pdShowDone=!DATA.pdShowDone;save();render();};
-
-    const activePd=DATA.periods.filter(p=>!p.done).sort((a,b)=>a.endDate.localeCompare(b.endDate));
-    const donePd=DATA.periods.filter(p=>p.done).sort((a,b)=>a.endDate.localeCompare(b.endDate));
-    const pdList=[...activePd,...(DATA.pdShowDone?donePd:[])];
-
-    if(pdList.length===0){
-      const em=document.createElement('div');
-      em.className='pd-empty';
-      em.textContent='期間タスクなし — 📆 で追加';
-      body.appendChild(em);
-    } else {
-      const pdCard=document.createElement('div');
-      pdCard.className='pd-card';
-      for(const pd of pdList) pdCard.appendChild(makePeriodItem(pd,mon,sun));
-      body.appendChild(pdCard);
-    }
-  }
-
-  /* week title */
-  const wt=document.createElement('div');
-  wt.className='sec-title';wt.style.marginTop='10px';wt.textContent='今週のタスク';
-  body.appendChild(wt);
-
-  /* day cards */
-  for(let i=0;i<7;i++){
-    const d=addDays(mon,i);
-    const key=ds(d);
-    const tasks=DATA.tasks[key]||[];
-    const isToday=key===todayStr();
-    const doneCnt=tasks.filter(t=>t.done).length;
-    const dlsDay=DATA.deadlines.filter(dl=>dl.dueDate===key);
-    const pdsDay=DATA.periods.filter(pd=>key>=pd.startDate&&key<=pd.endDate);
-
-    const card=document.createElement('div');
-    card.className='day-card'+(isToday?' is-today':'');
-    card.dataset.key=key;
-    if(!isToday&&tasks.length===0&&dlsDay.length===0&&pdsDay.length===0) card.classList.add('collapsed');
-
-    const urgentDl=dlsDay.find(dl=>!dl.done&&daysUntil(dl.dueDate)<=0);
-    const anyDl=dlsDay.find(dl=>!dl.done);
-    const anyPd=pdsDay.find(pd=>!pd.done);
-    const dot=(anyDl||anyPd)?'<span style="width:5px;height:5px;border-radius:50%;background:'+(urgentDl?'var(--danger)':(anyDl?'var(--warn)':'var(--accent)'))+';flex-shrink:0;display:inline-block"></span>':'';
-
-    const head=document.createElement('div');
-    head.className='day-head';
-    head.innerHTML='<span class="day-label">'+DAY_LABELS[d.getDay()]+'</span>'
-      +'<span class="day-date-str">'+fmtShort(d)+'</span>'
-      +'<div class="day-meta">'+dot
-      +'<span class="badge'+(doneCnt===tasks.length&&tasks.length>0?' done-all':'')+'">'+doneCnt+'/'+tasks.length+'</span>'
-      +'<span class="collapse-icon"><svg class="ih-icon ih-chevron-down" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6" fill="none"/></svg></span></div>';
-    head.onclick=()=>card.classList.toggle('collapsed');
-    card.appendChild(head);
-
-    const ul=document.createElement('ul');
-    ul.className='task-list';
-    for(const t of tasks) ul.appendChild(makeTaskItem(t,key));
-    for(const dl of dlsDay){
-      const u=dlUrgency(dl);
-      const chip=document.createElement('div');
-      chip.className='dl-chip '+u+(dl.done?' done-chip':'');
-      chip.innerHTML='<span class="dl-chip-dot"></span>'
-        +'<span class="dl-chip-text">'+esc(dl.text)+'</span>'
-        +'<span class="dl-chip-badge">'+dlLabel(dl)+'</span>';
-      ul.appendChild(chip);
-    }
-    for(const pd of pdsDay){
-      const u=pdUrgency(pd);
-      const isStart=key===pd.startDate, isEnd=key===pd.endDate;
-      const marker=isStart?'開始 ':(isEnd?'終了 ':'継続 ');
-      const chip=document.createElement('div');
-      chip.className='pd-chip '+u+(pd.done?' done-chip':'');
-      chip.innerHTML='<span class="pd-chip-dot"></span>'
-        +'<span class="pd-chip-text">'+marker+esc(pd.text)+'</span>'
-        +'<span class="pd-chip-badge">'+pdLabel(pd)+'</span>';
-      ul.appendChild(chip);
-    }
-
-    const addRow=document.createElement('div');
-    addRow.className='add-row';
-    addRow.innerHTML='<input class="add-inp" placeholder="タスクを追加…" maxlength="120" data-key="'+key+'" autocomplete="off" spellcheck="false">'
-      +'<button class="recur-toggle" title="毎週繰り返し"><svg class="ih-icon ih-repeat" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v-3a3 3 0 0 1 3 -3h13m-3 -3l3 3l-3 3" fill="none"/><path d="M20 12v3a3 3 0 0 1 -3 3h-13m3 3l-3 -3l3 -3" fill="none"/></svg></button>'
-      +'<button class="add-row-btn" title="追加"><svg class="ih-icon ih-arrow-right" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l14 0" fill="none"/><path d="M15 16l4 -4l-4 -4" fill="none"/></svg></button>';
-    const inp=addRow.querySelector('.add-inp');
-    const recurBtn=addRow.querySelector('.recur-toggle');
-    let recurMode=false;
-    recurBtn.onclick=()=>{recurMode=!recurMode;recurBtn.classList.toggle('on',recurMode)};
-    const doAdd=()=>{
-      const v=inp.value.trim();if(!v)return;
-      if(!DATA.tasks[key]) DATA.tasks[key]=[];
-      if(recurMode){
-        const rec={id:uid(),text:v,days:[d.getDay()]};
-        DATA.recurring.push(rec);
-        DATA.tasks[key].push({id:uid(),text:v,done:false,recurId:rec.id});
-        toast('毎週繰り返しで追加');
-      } else {
-        DATA.tasks[key].push({id:uid(),text:v,done:false});
-      }
-      save();render();
-      requestAnimationFrame(()=>{
-        const i2=document.querySelector('.add-inp[data-key="'+key+'"]');
-        if(i2) i2.focus();
-      });
-    };
-    addRow.querySelector('.add-row-btn').onclick=doAdd;
-    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doAdd();}if(e.key==='Escape')inp.blur();});
-    card.appendChild(ul);card.appendChild(addRow);
-
-    body.appendChild(card);
-  }
+  renderBody(body, mon, sun);
+  updateNavBadges();
 }
 
-/* ════ DEADLINE ITEM ════ */
-function makeDlItem(dl,mon,sun){
-  const SVG_PEN = '<svg class="ih-icon ih-pen" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.502 5.093a2.073 2.073 0 1 1 2.93 2.927l-9.483 9.483-3.95 1.023 1.022-3.95z" fill="none"/></svg>';
-  const SVG_TRASH = '<svg class="ih-icon ih-trash" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path class="lid-lower" d="M4 7l16 0" fill="none"/><path d="M10 11l0 6" fill="none"/><path d="M14 11l0 6" fill="none"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" fill="none"/><path class="lid-upper" d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" fill="none"/></svg>';
-  const SVG_ARROW = '<svg class="ih-icon ih-arrow-right" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l14 0" fill="none"/><path d="M15 16l4 -4l-4 -4" fill="none"/></svg>';
-  const u=dlUrgency(dl);
-  const due=parseDate(dl.dueDate);
+function renderBody(body, mon, sun) {
+  const wk=weekKey(mon);
+
+  // carry banner
+  const carryEl=buildCarryBanner(mon, wk);
+  if(carryEl) body.appendChild(carryEl);
+
+  // sections (only when visible)
+  if(DATA.dlVisible) {
+    const freqWrap=document.createElement('div');
+    freqWrap.dataset.section='freq';
+    freqWrap.appendChild(buildSectionTitle('回数タスク', {marginTop:'2px'}));
+    const freqSecs=buildFreqSections();
+    freqSecs.removeAttribute('data-section'); // avoid duplicate
+    freqWrap.appendChild(freqSecs);
+    body.appendChild(freqWrap);
+    body.appendChild(buildDeadlineSection(mon, sun));
+    body.appendChild(buildPeriodSection(mon, sun));
+  }
+
+  // week section (always visible)
+  body.appendChild(buildWeekSection(mon, sun));
+}
+
+// ══ RENDER: SECTIONS ══════════════════════════════════════════════════════════
+
+function buildSectionTitle(text, style) {
+  const el=document.createElement('div');
+  el.className='sec-title';
+  Object.assign(el.style, style||{});
+  el.textContent=text;
+  return el;
+}
+
+// helper: replace a named section in place without full re-render
+function replaceSection(sectionId, buildFn) {
+  const old=document.querySelector('[data-section="'+sectionId+'"]');
+  if(!old) return;
+  const next=buildFn();
+  if(sectionId==='freq') {
+    // freq is wrapped with title; rebuild wrapper
+    const wrap=document.createElement('div');
+    wrap.dataset.section='freq';
+    wrap.appendChild(buildSectionTitle('回数タスク',{marginTop:'2px'}));
+    next.removeAttribute('data-section');
+    wrap.appendChild(next);
+    old.replaceWith(wrap);
+  } else {
+    next.dataset.section=sectionId;
+    old.replaceWith(next);
+  }
+  updateNavBadges();
+}
+
+// -- freq sections
+function buildFreqSections() {
+  const wrapper=document.createElement('div');
+  wrapper.className='freq-sections';
+  wrapper.dataset.section='freq';
+  for(const type of FREQ_TYPES) wrapper.appendChild(buildFreqSection(type));
+  return wrapper;
+}
+
+function buildFreqSection(type) {
+  const items=DATA.freqTasks.filter(ft=>ft.type===type);
+  const key=freqPeriodKey(type);
+  const achCount=items.filter(ft=>freqGetCount(ft,key)>=ft.target).length;
+  const allDone=items.length>0 && achCount===items.length;
+
+  const sec=document.createElement('div');
+  sec.className='freq-sec';
+
+  const head=document.createElement('div');
+  head.className='freq-sec-head';
+  head.innerHTML='<span class="freq-sec-title">'+FREQ_TITLES[type]+'</span>'
+    +'<span class="freq-sec-badge" style="'+(allDone?'color:var(--accent);border-color:var(--accent-dim)':'')+'">'
+    +achCount+'/'+items.length+'</span>'
+    +ICONS.chevDownSm;
+  head.onclick=()=>sec.classList.toggle('collapsed');
+  sec.appendChild(head);
+
+  const body=document.createElement('div');
+  body.className='freq-sec-body';
+  if(items.length===0) {
+    const em=document.createElement('div');
+    em.className='freq-empty'; em.textContent='回数タスクなし';
+    body.appendChild(em);
+  } else {
+    for(const ft of items) body.appendChild(buildFreqItem(ft, key));
+  }
+  sec.appendChild(body);
+  return sec;
+}
+
+// -- deadline section
+function buildDeadlineSection(mon, sun) {
+  const wrap=document.createElement('div');
+  wrap.dataset.section='deadline';
+
+  const titleRow=document.createElement('div');
+  titleRow.style.cssText='display:flex;align-items:center;gap:8px;margin-top:2px';
+  titleRow.innerHTML='<span class="sec-title" style="flex:1;padding-bottom:5px">締切タスク</span>'
+    +'<button id="toggleDlDone" style="background:none;border:none;color:var(--text-sub);font-size:.68rem;font-family:var(--mono);cursor:pointer;padding-bottom:5px">'
+    +(DATA.dlShowDone?'完了を隠す':'完了を表示')+'</button>';
+  titleRow.querySelector('#toggleDlDone').onclick=()=>{DATA.dlShowDone=!DATA.dlShowDone;save();replaceSection('deadline',()=>buildDeadlineSection(mon,sun));};
+  wrap.appendChild(titleRow);
+
+  const active=DATA.deadlines.filter(d=>!d.done).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+  const doneDl=DATA.deadlines.filter(d=>d.done).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+  const list=[...active,...(DATA.dlShowDone?doneDl:[])];
+
+  if(list.length===0) {
+    const em=document.createElement('div');
+    em.className='dl-empty'; em.textContent='締切タスクなし — 📅 で追加';
+    wrap.appendChild(em);
+  } else {
+    const card=document.createElement('div');
+    card.className='dl-card';
+    for(const dl of list) card.appendChild(buildDlItem(dl, mon, sun));
+    wrap.appendChild(card);
+  }
+  return wrap;
+}
+
+// -- period section
+function buildPeriodSection(mon, sun) {
+  const wrap=document.createElement('div');
+  wrap.dataset.section='period';
+
+  const titleRow=document.createElement('div');
+  titleRow.style.cssText='display:flex;align-items:center;gap:8px;margin-top:2px';
+  titleRow.innerHTML='<span class="sec-title" style="flex:1;padding-bottom:5px">期間タスク</span>'
+    +'<button id="togglePdDone" style="background:none;border:none;color:var(--text-sub);font-size:.68rem;font-family:var(--mono);cursor:pointer;padding-bottom:5px">'
+    +(DATA.pdShowDone?'完了を隠す':'完了を表示')+'</button>';
+  titleRow.querySelector('#togglePdDone').onclick=()=>{DATA.pdShowDone=!DATA.pdShowDone;save();replaceSection('period',()=>buildPeriodSection(mon,sun));};
+  wrap.appendChild(titleRow);
+
+  const active=DATA.periods.filter(p=>!p.done).sort((a,b)=>a.endDate.localeCompare(b.endDate));
+  const donePd=DATA.periods.filter(p=>p.done).sort((a,b)=>a.endDate.localeCompare(b.endDate));
+  const list=[...active,...(DATA.pdShowDone?donePd:[])];
+
+  if(list.length===0) {
+    const em=document.createElement('div');
+    em.className='pd-empty'; em.textContent='期間タスクなし — 📆 で追加';
+    wrap.appendChild(em);
+  } else {
+    const card=document.createElement('div');
+    card.className='pd-card';
+    for(const pd of list) card.appendChild(buildPeriodItem(pd, mon, sun));
+    wrap.appendChild(card);
+  }
+  return wrap;
+}
+
+// -- week section
+function buildWeekSection(mon, sun) {
+  const wrap=document.createElement('div');
+  wrap.dataset.section='week';
+  wrap.appendChild(buildSectionTitle('今週のタスク', {marginTop:'10px'}));
+  for(let i=0;i<7;i++) wrap.appendChild(buildDayCard(addDays(mon,i), mon, sun));
+  return wrap;
+}
+
+// -- carry banner
+function buildCarryBanner(mon, wk) {
+  const prevMon=addDays(mon,-7);
+  if(DATA.carried['carry_'+wk]) return null;
+  const carry=[];
+  for(let i=0;i<7;i++)
+    for(const t of(DATA.tasks[ds(addDays(prevMon,i))]||[]))
+      if(!t.done) carry.push({...t});
+  if(carry.length===0) return null;
+
+  const b=document.createElement('div');
+  b.className='carry-banner';
+  b.innerHTML='<span>⏩ 前週の未完了 <b style="color:var(--accent)">'+carry.length+'</b> 件</span>'
+    +'<button class="carry-btn" id="doCarry">月曜に追加</button>'
+    +'<button class="carry-dismiss" id="dismissCarry">'+ICONS.x+'</button>';
+  b.querySelector('#doCarry').onclick=()=>{
+    const mk=ds(mon);
+    if(!DATA.tasks[mk]) DATA.tasks[mk]=[];
+    for(const t of carry) DATA.tasks[mk].push({id:uid(),text:t.text,done:false});
+    DATA.carried['carry_'+wk]=true; save(); render();
+  };
+  b.querySelector('#dismissCarry').onclick=()=>{DATA.carried['carry_'+wk]=true; save(); render();};
+  return b;
+}
+
+// ══ RENDER: ITEMS ═════════════════════════════════════════════════════════════
+
+// -- freq item
+function buildFreqItem(ft, key) {
+  const count=freqGetCount(ft,key);
+  const pct=Math.min(100,Math.round(count/ft.target*100));
+  const over=count>ft.target, achieved=count>=ft.target;
+  const overPct=over?Math.min(50,Math.round((count-ft.target)/ft.target*50)):0;
+
+  const div=document.createElement('div');
+  div.className='freq-item';
+
+  const row=document.createElement('div');
+  row.className='freq-row';
+
+  const textEl=document.createElement('span');
+  textEl.className='freq-text'; textEl.textContent=ft.text;
+
+  const tapBtn=document.createElement('button');
+  tapBtn.className='freq-tap-btn'+(achieved?' achieved':'')+(over?' exceeded':'');
+  tapBtn.textContent=count+'/'+ft.target;
+
+  let pressTimer=null, didLong=false;
+  const startPress=()=>{
+    didLong=false;
+    pressTimer=setTimeout(()=>{
+      didLong=true;
+      freqAddCount(ft,key,-1); save();
+      replaceSection('freq',buildFreqSections); toast('-1');
+    },500);
+  };
+  const endPress=()=>{
+    clearTimeout(pressTimer);
+    if(!didLong){ freqAddCount(ft,key,1); save(); replaceSection('freq',buildFreqSections); }
+  };
+  tapBtn.addEventListener('touchstart',e=>{e.preventDefault();startPress();},{passive:false});
+  tapBtn.addEventListener('touchend',  e=>{e.preventDefault();endPress();});
+  tapBtn.addEventListener('mousedown', startPress);
+  tapBtn.addEventListener('mouseup',   endPress);
+  tapBtn.addEventListener('mouseleave',()=>clearTimeout(pressTimer));
+
+  const editBtn=document.createElement('button');
+  editBtn.className='freq-edit'; editBtn.innerHTML=ICONS.pen;
+  editBtn.onclick=()=>openFreqModal(ft.id);
+
+  const delBtn=document.createElement('button');
+  delBtn.className='freq-del'; delBtn.innerHTML=ICONS.trash;
+  delBtn.onclick=()=>{DATA.freqTasks=DATA.freqTasks.filter(x=>x.id!==ft.id); save(); replaceSection('freq',buildFreqSections);};
+
+  row.appendChild(textEl); row.appendChild(tapBtn);
+  row.appendChild(editBtn); row.appendChild(delBtn);
+  div.appendChild(row);
+
+  const barRow=document.createElement('div');
+  barRow.className='freq-bar-row';
+  const bar=document.createElement('div');
+  bar.className='freq-bar';
+  const fill=document.createElement('div');
+  fill.className='freq-bar-fill'+(over?' exceeded-fill':'');
+  fill.style.width=pct+'%';
+  bar.appendChild(fill);
+  if(over){
+    const overEl=document.createElement('div');
+    overEl.className='freq-bar-over'; overEl.style.width=overPct+'%';
+    bar.appendChild(overEl);
+  }
+  const lbl=document.createElement('span');
+  lbl.className='freq-target-label';
+  lbl.textContent=freqTypeLabel(ft.type)+' 目標 '+ft.target+'回';
+  barRow.appendChild(bar); barRow.appendChild(lbl);
+  div.appendChild(barRow);
+  return div;
+}
+
+// -- deadline item
+function buildDlItem(dl, mon, sun) {
+  const u=dlUrgency(dl), due=parseDate(dl.dueDate);
   const inWeek=due>=mon&&due<=sun;
+
   const div=document.createElement('div');
   div.className='dl-item'+(dl.done?' done-dl':'');
 
   const cb=document.createElement('input');
-  cb.type='checkbox';cb.className='dl-cb';if(dl.done) cb.checked=true;
+  cb.type='checkbox'; cb.className='dl-cb'; if(dl.done) cb.checked=true;
+  cb.onchange=e=>{dl.done=e.target.checked; save(); render();};
 
   const textSpan=document.createElement('span');
-  textSpan.className='dl-text';
-  textSpan.textContent=dl.text;
-  textSpan.onclick=()=>{dl.done=!dl.done;save();render();};
+  textSpan.className='dl-text'; textSpan.textContent=dl.text;
+  textSpan.onclick=()=>{dl.done=!dl.done; save(); render();};
 
   const badge=document.createElement('span');
-  badge.className='dl-badge '+u;
-  badge.textContent=dlLabel(dl);
+  badge.className='dl-badge '+u; badge.textContent=dlLabel(dl);
 
   const editBtn=document.createElement('button');
-  editBtn.className='dl-edit';editBtn.title='編集';editBtn.innerHTML=SVG_PEN;
+  editBtn.className='dl-edit'; editBtn.innerHTML=ICONS.pen;
   editBtn.onclick=()=>openDlModal(dl.id);
 
   const gotoBtn=document.createElement('button');
-  gotoBtn.className='dl-goto';gotoBtn.title='その週へ';gotoBtn.innerHTML=SVG_ARROW;
+  gotoBtn.className='dl-goto'; gotoBtn.innerHTML=ICONS.arrow;
   if(!inWeek) gotoBtn.style.visibility='hidden';
-
-  const delBtn=document.createElement('button');
-  delBtn.className='dl-del';delBtn.innerHTML=SVG_TRASH;
-
-  div.appendChild(cb);
-  div.appendChild(textSpan);
-  div.appendChild(badge);
-  div.appendChild(editBtn);
-  div.appendChild(gotoBtn);
-  div.appendChild(delBtn);
-
-  cb.onchange=e=>{dl.done=e.target.checked;save();render();};
-
   gotoBtn.onclick=()=>{
     const cur=addDays(getMon(today()),offsetWeeks*7);
     offsetWeeks=Math.round((getMon(due)-cur)/604800000);
-    save();render();toast(fmtShort(due)+'の週へ移動');
+    save(); render(); toast(fmtShort(due)+'の週へ移動');
   };
-  delBtn.onclick=()=>{DATA.deadlines=DATA.deadlines.filter(x=>x.id!==dl.id);save();render();};
+
+  const delBtn=document.createElement('button');
+  delBtn.className='dl-del'; delBtn.innerHTML=ICONS.trash;
+  delBtn.onclick=()=>{DATA.deadlines=DATA.deadlines.filter(x=>x.id!==dl.id); save(); render();};
+
+  div.appendChild(cb); div.appendChild(textSpan); div.appendChild(badge);
+  div.appendChild(editBtn); div.appendChild(gotoBtn); div.appendChild(delBtn);
   return div;
 }
 
-/* ════ PERIOD ITEM ════ */
-function makePeriodItem(pd,mon,sun){
-  const SVG_PEN = '<svg class="ih-icon ih-pen" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.502 5.093a2.073 2.073 0 1 1 2.93 2.927l-9.483 9.483-3.95 1.023 1.022-3.95z" fill="none"/></svg>';
-  const SVG_TRASH = '<svg class="ih-icon ih-trash" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path class="lid-lower" d="M4 7l16 0" fill="none"/><path d="M10 11l0 6" fill="none"/><path d="M14 11l0 6" fill="none"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" fill="none"/><path class="lid-upper" d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" fill="none"/></svg>';
-  const SVG_ARROW = '<svg class="ih-icon ih-arrow-right" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l14 0" fill="none"/><path d="M15 16l4 -4l-4 -4" fill="none"/></svg>';
+// -- period item
+function buildPeriodItem(pd, mon, sun) {
   const u=pdUrgency(pd);
   const start=parseDate(pd.startDate), end=parseDate(pd.endDate);
-  const inWeek=(start<=sun&&end>=mon);
+  const inWeek=start<=sun && end>=mon;
+
   const div=document.createElement('div');
   div.className='pd-item'+(pd.done?' done-pd':'');
 
@@ -674,45 +937,35 @@ function makePeriodItem(pd,mon,sun){
   row.className='pd-row';
 
   const cb=document.createElement('input');
-  cb.type='checkbox';cb.className='dl-cb';if(pd.done) cb.checked=true;
+  cb.type='checkbox'; cb.className='dl-cb'; if(pd.done) cb.checked=true;
+  cb.onchange=e=>{pd.done=e.target.checked; save(); render();};
 
   const textSpan=document.createElement('span');
-  textSpan.className='pd-text';
-  textSpan.textContent=pd.text;
-  textSpan.onclick=()=>{pd.done=!pd.done;save();render();};
+  textSpan.className='pd-text'; textSpan.textContent=pd.text;
+  textSpan.onclick=()=>{pd.done=!pd.done; save(); render();};
 
   const badge=document.createElement('span');
-  badge.className='pd-badge '+u;
-  badge.textContent=pdLabel(pd);
+  badge.className='pd-badge '+u; badge.textContent=pdLabel(pd);
 
   const editBtn=document.createElement('button');
-  editBtn.className='pd-edit';editBtn.title='編集';editBtn.innerHTML=SVG_PEN;
+  editBtn.className='pd-edit'; editBtn.innerHTML=ICONS.pen;
   editBtn.onclick=()=>openPdModal(pd.id);
 
   const gotoBtn=document.createElement('button');
-  gotoBtn.className='dl-goto';gotoBtn.title='その週へ';gotoBtn.innerHTML=SVG_ARROW;
-  if(!inWeek){
-    gotoBtn.style.visibility='hidden';
-  } else {
-    gotoBtn.onclick=()=>{
-      const cur=addDays(getMon(today()),offsetWeeks*7);
-      offsetWeeks=Math.round((getMon(start)-cur)/604800000);
-      save();render();toast(fmtShort(start)+'の週へ移動');
-    };
-  }
+  gotoBtn.className='dl-goto'; gotoBtn.innerHTML=ICONS.arrow;
+  if(!inWeek) gotoBtn.style.visibility='hidden';
+  gotoBtn.onclick=()=>{
+    const cur=addDays(getMon(today()),offsetWeeks*7);
+    offsetWeeks=Math.round((getMon(start)-cur)/604800000);
+    save(); render(); toast(fmtShort(start)+'の週へ移動');
+  };
 
   const delBtn=document.createElement('button');
-  delBtn.className='pd-del';delBtn.innerHTML=SVG_TRASH;
-  delBtn.onclick=()=>{DATA.periods=DATA.periods.filter(x=>x.id!==pd.id);save();render();};
+  delBtn.className='pd-del'; delBtn.innerHTML=ICONS.trash;
+  delBtn.onclick=()=>{DATA.periods=DATA.periods.filter(x=>x.id!==pd.id); save(); render();};
 
-  cb.onchange=e=>{pd.done=e.target.checked;save();render();};
-
-  row.appendChild(cb);
-  row.appendChild(textSpan);
-  row.appendChild(badge);
-  row.appendChild(editBtn);
-  row.appendChild(gotoBtn);
-  row.appendChild(delBtn);
+  row.appendChild(cb); row.appendChild(textSpan); row.appendChild(badge);
+  row.appendChild(editBtn); row.appendChild(gotoBtn); row.appendChild(delBtn);
   div.appendChild(row);
 
   const range=document.createElement('div');
@@ -725,192 +978,248 @@ function makePeriodItem(pd,mon,sun){
   const fill=document.createElement('div');
   fill.className='pd-bar-fill'+(u==='overdue'?' overdue':'');
   fill.style.width=pdProgress(pd)+'%';
-  bar.appendChild(fill);
-  div.appendChild(bar);
-
+  bar.appendChild(fill); div.appendChild(bar);
   return div;
 }
 
-/* ════ TASK ITEM ════ */
-function makeTaskItem(t,key){
+// -- day card
+function buildDayCard(d, mon, sun) {
+  const key=ds(d);
+  const tasks=DATA.tasks[key]||[];
+  const isToday=key===todayStr();
+  const doneCnt=tasks.filter(t=>t.done).length;
+  const dlsDay=DATA.deadlines.filter(dl=>dl.dueDate===key);
+  const pdsDay=DATA.periods.filter(pd=>key>=pd.startDate&&key<=pd.endDate);
+
+  const card=document.createElement('div');
+  card.className='day-card'+(isToday?' is-today':'');
+  card.dataset.key=key;
+  if(!isToday && tasks.length===0 && dlsDay.length===0 && pdsDay.length===0)
+    card.classList.add('collapsed');
+
+  // dot indicator
+  const urgentDl=dlsDay.find(dl=>!dl.done&&daysUntil(dl.dueDate)<=0);
+  const anyDl=dlsDay.find(dl=>!dl.done);
+  const anyPd=pdsDay.find(pd=>!pd.done);
+  const dot=(anyDl||anyPd)
+    ?'<span style="width:5px;height:5px;border-radius:50%;background:'
+      +(urgentDl?'var(--danger)':(anyDl?'var(--warn)':'var(--accent)'))
+      +';flex-shrink:0;display:inline-block"></span>'
+    :'';
+
+  const head=document.createElement('div');
+  head.className='day-head';
+  head.innerHTML='<span class="day-label">'+DAY_LABELS[d.getDay()]+'</span>'
+    +'<span class="day-date-str">'+fmtShort(d)+'</span>'
+    +'<div class="day-meta">'+dot
+    +'<span class="badge'+(doneCnt===tasks.length&&tasks.length>0?' done-all':'')+'">'+doneCnt+'/'+tasks.length+'</span>'
+    +'<span class="collapse-icon">'+ICONS.chevDown+'</span></div>';
+  head.onclick=()=>card.classList.toggle('collapsed');
+  card.appendChild(head);
+
+  const ul=document.createElement('ul');
+  ul.className='task-list';
+  for(const t of tasks) ul.appendChild(buildTaskItem(t, key));
+  for(const dl of dlsDay) ul.appendChild(buildDlChip(dl));
+  for(const pd of pdsDay) ul.appendChild(buildPdChip(pd, key));
+  card.appendChild(ul);
+
+  card.appendChild(buildAddRow(key, d));
+  return card;
+}
+
+// -- task item
+function buildTaskItem(t, key) {
   const li=document.createElement('li');
   li.className='task-item'+(t.done?' done':'');
   li.dataset.id=t.id;
 
-  const SVG_PEN = '<svg class="ih-icon ih-pen" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.502 5.093a2.073 2.073 0 1 1 2.93 2.927l-9.483 9.483-3.95 1.023 1.022-3.95z" fill="none"/></svg>';
-  const SVG_TRASH = '<svg class="ih-icon ih-trash" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path class="lid-lower" d="M4 7l16 0" fill="none"/><path d="M10 11l0 6" fill="none"/><path d="M14 11l0 6" fill="none"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" fill="none"/><path class="lid-upper" d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" fill="none"/></svg>';
-  const SVG_REPEAT = '<svg class="ih-icon ih-repeat" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v-3a3 3 0 0 1 3 -3h13m-3 -3l3 3l-3 3" fill="none"/><path d="M20 12v3a3 3 0 0 1 -3 3h-13m3 3l-3 -3l3 -3" fill="none"/></svg>';
-
   const cb=document.createElement('input');
-  cb.type='checkbox';cb.className='cb';if(t.done) cb.checked=true;
+  cb.type='checkbox'; cb.className='cb'; if(t.done) cb.checked=true;
+  cb.onchange=e=>{t.done=e.target.checked; save(); render();};
 
   const textSpan=document.createElement('span');
-  textSpan.className='task-text';
-  textSpan.textContent=t.text;
-  textSpan.onclick=()=>{t.done=!t.done;save();render();};
+  textSpan.className='task-text'; textSpan.textContent=t.text;
+  textSpan.onclick=()=>{t.done=!t.done; save(); render();};
 
-  li.appendChild(cb);
-  li.appendChild(textSpan);
+  li.appendChild(cb); li.appendChild(textSpan);
 
-  if(t.recurId){
+  if(t.recurId) {
     const ri=document.createElement('span');
-    ri.className='recur-icon';ri.title='繰り返し設定を編集';ri.innerHTML=SVG_REPEAT;
-    ri.onclick=e=>{e.stopPropagation();openRecurModal(t.recurId);};
+    ri.className='recur-icon'; ri.innerHTML=ICONS.repeat;
+    ri.onclick=e=>{e.stopPropagation(); openRecurModal(t.recurId);};
     li.appendChild(ri);
   }
 
   const editBtn=document.createElement('button');
-  editBtn.className='edit-btn';editBtn.title='編集';editBtn.innerHTML=SVG_PEN;
+  editBtn.className='edit-btn'; editBtn.innerHTML=ICONS.pen;
+  editBtn.onclick=e=>{e.stopPropagation(); startInlineEdit(li, textSpan, t, key);};
   li.appendChild(editBtn);
 
   const delBtn=document.createElement('button');
-  delBtn.className='del-btn';delBtn.innerHTML=SVG_TRASH;
-  li.appendChild(delBtn);
-
-  cb.onchange=e=>{t.done=e.target.checked;save();render();};
-
-  const startEdit=()=>{
-    li.classList.add('editing');
-    const inp=document.createElement('input');
-    inp.className='task-edit-inp';
-    inp.value=t.text;
-    li.replaceChild(inp,textSpan);
-    inp.focus();inp.select();
-    const commit=()=>{
-      const v=inp.value.trim();
-      if(v&&v!==t.text){
-        t.text=v;
-        if(t.recurId){
-          const rec=DATA.recurring.find(r=>r.id===t.recurId);
-          if(rec) rec.text=v;
-        }
-        save();
-      }
-      render();
-    };
-    inp.addEventListener('keydown',e2=>{
-      if(e2.key==='Enter'){e2.preventDefault();commit();}
-      if(e2.key==='Escape'){render();}
-    });
-    inp.addEventListener('blur',commit);
-  };
-  editBtn.onclick=e=>{e.stopPropagation();startEdit();};
-
+  delBtn.className='del-btn'; delBtn.innerHTML=ICONS.trash;
   delBtn.onclick=e=>{
     e.stopPropagation();
-    if(t.recurId&&confirm('繰り返し設定も削除?\nOK=全削除 / キャンセル=今週だけ'))
+    if(t.recurId && confirm('繰り返し設定も削除?\nOK=全削除 / キャンセル=今週だけ'))
       DATA.recurring=DATA.recurring.filter(r=>r.id!==t.recurId);
     DATA.tasks[key]=(DATA.tasks[key]||[]).filter(x=>x.id!==t.id);
-    save();render();
+    save(); render();
   };
+  li.appendChild(delBtn);
   return li;
 }
 
-/* ════ DEADLINE MODAL (add/edit) ════ */
+function startInlineEdit(li, textSpan, t, key) {
+  li.classList.add('editing');
+  const inp=document.createElement('input');
+  inp.className='task-edit-inp'; inp.value=t.text;
+  li.replaceChild(inp, textSpan);
+  inp.focus(); inp.select();
+  const commit=()=>{
+    const v=inp.value.trim();
+    if(v && v!==t.text) {
+      t.text=v;
+      if(t.recurId) { const rec=DATA.recurring.find(r=>r.id===t.recurId); if(rec) rec.text=v; }
+      save();
+    }
+    render();
+  };
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commit();}if(e.key==='Escape')render();});
+  inp.addEventListener('blur', commit);
+}
+
+// -- chips
+function buildDlChip(dl) {
+  const u=dlUrgency(dl);
+  const chip=document.createElement('div');
+  chip.className='dl-chip '+u+(dl.done?' done-chip':'');
+  chip.innerHTML='<span class="dl-chip-dot"></span>'
+    +'<span class="dl-chip-text">'+esc(dl.text)+'</span>'
+    +'<span class="dl-chip-badge">'+dlLabel(dl)+'</span>';
+  return chip;
+}
+
+function buildPdChip(pd, key) {
+  const u=pdUrgency(pd);
+  const marker=key===pd.startDate?'開始 ':(key===pd.endDate?'終了 ':'継続 ');
+  const chip=document.createElement('div');
+  chip.className='pd-chip '+u+(pd.done?' done-chip':'');
+  chip.innerHTML='<span class="pd-chip-dot"></span>'
+    +'<span class="pd-chip-text">'+marker+esc(pd.text)+'</span>'
+    +'<span class="pd-chip-badge">'+pdLabel(pd)+'</span>';
+  return chip;
+}
+
+// -- add row
+function buildAddRow(key, d) {
+  const addRow=document.createElement('div');
+  addRow.className='add-row';
+  addRow.innerHTML='<input class="add-inp" placeholder="タスクを追加…" maxlength="120" data-key="'+key+'" autocomplete="off" spellcheck="false">'
+    +'<button class="recur-toggle" title="毎週繰り返し">'+ICONS.repeatRow+'</button>'
+    +'<button class="add-row-btn" title="追加">'+ICONS.arrowRow+'</button>';
+
+  const inp=addRow.querySelector('.add-inp');
+  const recurBtn=addRow.querySelector('.recur-toggle');
+  let recurMode=false;
+  recurBtn.onclick=()=>{recurMode=!recurMode; recurBtn.classList.toggle('on',recurMode);};
+
+  const doAdd=()=>{
+    const v=inp.value.trim(); if(!v) return;
+    if(!DATA.tasks[key]) DATA.tasks[key]=[];
+    if(recurMode) {
+      const rec={id:uid(),text:v,days:[d.getDay()]};
+      DATA.recurring.push(rec);
+      DATA.tasks[key].push({id:uid(),text:v,done:false,recurId:rec.id});
+      toast('毎週繰り返しで追加');
+    } else {
+      DATA.tasks[key].push({id:uid(),text:v,done:false});
+    }
+    save(); render();
+    requestAnimationFrame(()=>{
+      const i2=document.querySelector('.add-inp[data-key="'+key+'"]');
+      if(i2) i2.focus();
+    });
+  };
+  addRow.querySelector('.add-row-btn').onclick=doAdd;
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doAdd();}if(e.key==='Escape')inp.blur();});
+  return addRow;
+}
+
+// ══ MODALS ════════════════════════════════════════════════════════════════════
+
+function openModal(id)   { closeAllModals(); document.getElementById(id).classList.add('open'); }
+function closeAllModals(){ document.querySelectorAll('.overlay.open').forEach(el=>el.classList.remove('open')); }
+
+// backdrop click closes
+document.querySelectorAll('.overlay').forEach(el=>{
+  el.addEventListener('click',e=>{if(e.target===el) closeAllModals();});
+});
+
+// -- deadline modal
 let dlEditId=null;
-function openDlModal(editId){
+function openDlModal(editId) {
   dlEditId=editId||null;
   const isEdit=!!dlEditId;
   document.getElementById('dlModalTitle').textContent=isEdit?'締切タスクを編集':'締切タスクを追加';
   document.getElementById('dlSubmit').textContent=isEdit?'保存':'追加';
-  if(isEdit){
-    const dl=DATA.deadlines.find(d=>d.id===dlEditId);
-    document.getElementById('dlText').value=dl.text;
-    document.getElementById('dlDate').value=dl.dueDate;
-  } else {
-    document.getElementById('dlText').value='';
-    document.getElementById('dlDate').value=todayStr();
-  }
-  document.getElementById('dlOverlay').classList.add('open');
-  setTimeout(()=>document.getElementById('dlText').focus(),80);
+  if(isEdit){const dl=DATA.deadlines.find(d=>d.id===dlEditId); document.getElementById('dlText').value=dl.text; document.getElementById('dlDate').value=dl.dueDate;}
+  else{document.getElementById('dlText').value=''; document.getElementById('dlDate').value=todayStr();}
+  openModal('dlOverlay'); setTimeout(()=>document.getElementById('dlText').focus(),80);
 }
-function closeDlModal(){document.getElementById('dlOverlay').classList.remove('open');dlEditId=null;}
-document.getElementById('dlCancel').onclick=closeDlModal;
-document.getElementById('dlOverlay').onclick=e=>{if(e.target===e.currentTarget)closeDlModal()};
+document.getElementById('dlCancel').onclick=closeAllModals;
 document.getElementById('dlSubmit').onclick=()=>{
   const text=document.getElementById('dlText').value.trim();
   const date=document.getElementById('dlDate').value;
   if(!text||!date){toast('テキストと日付を入力してください');return;}
-  if(dlEditId){
-    const dl=DATA.deadlines.find(d=>d.id===dlEditId);
-    if(dl){dl.text=text;dl.dueDate=date;}
-    toast('更新しました');
-  } else {
-    DATA.deadlines.push({id:uid(),text,dueDate:date,done:false});
-    toast('締切タスクを追加しました');
-  }
-  save();closeDlModal();render();
+  if(dlEditId){const dl=DATA.deadlines.find(d=>d.id===dlEditId); if(dl){dl.text=text;dl.dueDate=date;} toast('更新しました');}
+  else{DATA.deadlines.push({id:uid(),text,dueDate:date,done:false}); toast('締切タスクを追加しました');}
+  save(); closeAllModals(); render();
 };
 document.getElementById('dlText').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('dlDate').focus();}});
 document.getElementById('dlDate').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('dlSubmit').click();}});
 
-/* ════ PERIOD MODAL (add/edit) ════ */
+// -- period modal
 let pdEditId=null;
-function openPdModal(editId){
+function openPdModal(editId) {
   pdEditId=editId||null;
   const isEdit=!!pdEditId;
   document.getElementById('pdModalTitle').textContent=isEdit?'期間タスクを編集':'期間タスクを追加';
   document.getElementById('pdSubmit').textContent=isEdit?'保存':'追加';
-  if(isEdit){
-    const pd=DATA.periods.find(p=>p.id===pdEditId);
-    document.getElementById('pdText').value=pd.text;
-    document.getElementById('pdStart').value=pd.startDate;
-    document.getElementById('pdEnd').value=pd.endDate;
-  } else {
-    document.getElementById('pdText').value='';
-    document.getElementById('pdStart').value=todayStr();
-    document.getElementById('pdEnd').value=todayStr();
-  }
-  document.getElementById('pdOverlay').classList.add('open');
-  setTimeout(()=>document.getElementById('pdText').focus(),80);
+  if(isEdit){const pd=DATA.periods.find(p=>p.id===pdEditId); document.getElementById('pdText').value=pd.text; document.getElementById('pdStart').value=pd.startDate; document.getElementById('pdEnd').value=pd.endDate;}
+  else{document.getElementById('pdText').value=''; document.getElementById('pdStart').value=todayStr(); document.getElementById('pdEnd').value=todayStr();}
+  openModal('pdOverlay'); setTimeout(()=>document.getElementById('pdText').focus(),80);
 }
-function closePdModal(){document.getElementById('pdOverlay').classList.remove('open');pdEditId=null;}
-document.getElementById('pdCancel').onclick=closePdModal;
-document.getElementById('pdOverlay').onclick=e=>{if(e.target===e.currentTarget)closePdModal()};
+document.getElementById('pdCancel').onclick=closeAllModals;
 document.getElementById('pdSubmit').onclick=()=>{
   const text=document.getElementById('pdText').value.trim();
-  const start=document.getElementById('pdStart').value;
-  const end=document.getElementById('pdEnd').value;
+  const start=document.getElementById('pdStart').value, end=document.getElementById('pdEnd').value;
   if(!text||!start||!end){toast('すべての項目を入力してください');return;}
   if(end<start){toast('終了日は開始日以降にしてください');return;}
-  if(pdEditId){
-    const pd=DATA.periods.find(p=>p.id===pdEditId);
-    if(pd){pd.text=text;pd.startDate=start;pd.endDate=end;}
-    toast('更新しました');
-  } else {
-    DATA.periods.push({id:uid(),text,startDate:start,endDate:end,done:false});
-    toast('期間タスクを追加しました');
-  }
-  save();closePdModal();render();
+  if(pdEditId){const pd=DATA.periods.find(p=>p.id===pdEditId); if(pd){pd.text=text;pd.startDate=start;pd.endDate=end;} toast('更新しました');}
+  else{DATA.periods.push({id:uid(),text,startDate:start,endDate:end,done:false}); toast('期間タスクを追加しました');}
+  save(); closeAllModals(); render();
 };
 document.getElementById('pdText').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('pdStart').focus();}});
 document.getElementById('pdStart').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('pdEnd').focus();}});
 document.getElementById('pdEnd').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('pdSubmit').click();}});
 
-/* ════ RECUR EDIT MODAL ════ */
+// -- recur modal
 let recurEditId=null;
-function openRecurModal(recId){
+function openRecurModal(recId) {
   recurEditId=recId;
-  const rec=DATA.recurring.find(r=>r.id===recId);
-  if(!rec) return;
+  const rec=DATA.recurring.find(r=>r.id===recId); if(!rec) return;
   document.getElementById('recurText').value=rec.text;
-  const container=document.getElementById('recurDays');
-  container.innerHTML='';
+  const container=document.getElementById('recurDays'); container.innerHTML='';
   for(let i=0;i<7;i++){
     const label=document.createElement('label');
     label.className='day-check-label'+(rec.days.includes(i)?' checked':'');
     label.innerHTML='<input type="checkbox" value="'+i+'"'+(rec.days.includes(i)?' checked':'')+'>'+DAY_LABELS[i];
-    label.querySelector('input').addEventListener('change',function(){
-      label.classList.toggle('checked',this.checked);
-    });
+    label.querySelector('input').addEventListener('change',function(){label.classList.toggle('checked',this.checked);});
     container.appendChild(label);
   }
-  document.getElementById('recurOverlay').classList.add('open');
-  setTimeout(()=>document.getElementById('recurText').focus(),80);
+  openModal('recurOverlay'); setTimeout(()=>document.getElementById('recurText').focus(),80);
 }
-function closeRecurModal(){document.getElementById('recurOverlay').classList.remove('open');recurEditId=null;}
-document.getElementById('recurCancel').onclick=closeRecurModal;
-document.getElementById('recurOverlay').onclick=e=>{if(e.target===e.currentTarget)closeRecurModal()};
+document.getElementById('recurCancel').onclick=closeAllModals;
 document.getElementById('recurSave').onclick=()=>{
   const text=document.getElementById('recurText').value.trim();
   const days=[...document.querySelectorAll('#recurDays input:checked')].map(i=>parseInt(i.value));
@@ -918,74 +1227,89 @@ document.getElementById('recurSave').onclick=()=>{
   if(days.length===0){toast('曜日を選択してください');return;}
   const rec=DATA.recurring.find(r=>r.id===recurEditId);
   if(rec){
-    rec.text=text;rec.days=days;
-    /* also update existing task texts this week */
-    for(const tasks of Object.values(DATA.tasks)){
-      for(const t of tasks) if(t.recurId===rec.id) t.text=text;
-    }
-    save();toast('繰り返し設定を更新しました');
+    rec.text=text; rec.days=days;
+    for(const tasks of Object.values(DATA.tasks)) for(const t of tasks) if(t.recurId===rec.id) t.text=text;
+    save(); toast('繰り返し設定を更新しました');
   }
-  closeRecurModal();render();
+  closeAllModals(); render();
 };
 
-/* ════ FAB ════ */
+// -- freq modal
+let freqEditId=null;
+function syncFreqTypeLabels(){
+  ['W','M','Y'].forEach(l=>{const lbl=document.getElementById('freqType'+l); if(lbl) lbl.classList.toggle('checked',lbl.querySelector('input').checked);});
+}
+document.querySelectorAll('input[name="freqType"]').forEach(r=>r.addEventListener('change',syncFreqTypeLabels));
+function openFreqModal(editId) {
+  freqEditId=editId||null;
+  const isEdit=!!freqEditId;
+  document.getElementById('freqModalTitle').textContent=isEdit?'回数タスクを編集':'回数タスクを追加';
+  document.getElementById('freqSubmit').textContent=isEdit?'保存':'追加';
+  if(isEdit){const ft=DATA.freqTasks.find(x=>x.id===freqEditId); document.getElementById('freqText').value=ft.text; document.getElementById('freqTarget').value=ft.target; document.querySelectorAll('input[name="freqType"]').forEach(r=>{r.checked=(r.value===ft.type);});}
+  else{document.getElementById('freqText').value=''; document.getElementById('freqTarget').value='3'; document.querySelector('input[name="freqType"][value="weekly"]').checked=true;}
+  syncFreqTypeLabels();
+  openModal('freqOverlay'); setTimeout(()=>document.getElementById('freqText').focus(),80);
+}
+document.getElementById('freqCancel').onclick=closeAllModals;
+document.getElementById('freqSubmit').onclick=()=>{
+  const text=document.getElementById('freqText').value.trim();
+  const target=parseInt(document.getElementById('freqTarget').value)||0;
+  const type=document.querySelector('input[name="freqType"]:checked')?.value||'weekly';
+  if(!text){toast('タスク名を入力してください');return;}
+  if(target<1){toast('目標回数は1以上にしてください');return;}
+  if(freqEditId){const ft=DATA.freqTasks.find(x=>x.id===freqEditId); if(ft){ft.text=text;ft.target=target;ft.type=type;} toast('更新しました');}
+  else{DATA.freqTasks.push({id:uid(),text,type,target,logs:{}}); toast('回数タスクを追加しました');}
+  save(); closeAllModals(); render();
+};
+document.getElementById('freqText').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('freqTarget').focus();}});
+document.getElementById('freqTarget').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('freqSubmit').click();}});
+
+// ══ EVENT WIRING ══════════════════════════════════════════════════════════════
+
 const fabGroup=document.getElementById('fabGroup');
-document.getElementById('fab').onclick=e=>{e.stopPropagation();fabGroup.classList.toggle('open')};
+document.getElementById('fab').onclick=e=>{e.stopPropagation();fabGroup.classList.toggle('open');};
 document.getElementById('fabToday').onclick=()=>{
-  fabGroup.classList.remove('open');offsetWeeks=0;render();
+  fabGroup.classList.remove('open'); offsetWeeks=0; render();
   requestAnimationFrame(()=>{
     const inp=document.querySelector('.add-inp[data-key="'+todayStr()+'"]');
     if(inp){inp.closest('.day-card').classList.remove('collapsed');inp.focus();inp.scrollIntoView({behavior:'smooth',block:'center'});}
   });
 };
-document.getElementById('fabDeadline').onclick=()=>{fabGroup.classList.remove('open');openDlModal();};
-document.getElementById('fabPeriod').onclick=()=>{fabGroup.classList.remove('open');openPdModal();};
-document.getElementById('toggleDl').onclick=()=>{DATA.dlVisible=!DATA.dlVisible;save();render();};
+document.getElementById('fabDeadline').onclick=()=>{fabGroup.classList.remove('open'); openDlModal();};
+document.getElementById('fabPeriod').onclick=()=>{fabGroup.classList.remove('open'); openPdModal();};
+document.getElementById('fabFreq').onclick=()=>{fabGroup.classList.remove('open'); openFreqModal();};
+document.getElementById('toggleDl').onclick=()=>{DATA.dlVisible=!DATA.dlVisible; save(); render();};
+document.getElementById('prev').onclick=()=>{offsetWeeks--; render();};
+document.getElementById('next').onclick=()=>{offsetWeeks++; render();};
+document.getElementById('goToday').onclick=()=>{offsetWeeks=0; render();};
 
-/* ════ EXPORT / IMPORT ════ */
 document.getElementById('exportBtn').onclick=()=>{
   const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=url;
-  a.download='wtodo-'+todayStr()+'.json';
-  document.body.appendChild(a);a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  toast('書き出しました');
+  a.href=url; a.download='wtodo-'+todayStr()+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url); toast('書き出しました');
 };
-document.getElementById('importBtn').onclick=()=>{document.getElementById('importFile').click();};
+document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
 document.getElementById('importFile').addEventListener('change',e=>{
-  const file=e.target.files[0];
-  if(!file) return;
+  const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
   reader.onload=ev=>{
     try{
       const imported=JSON.parse(ev.target.result);
-      if(!imported||typeof imported!=='object'||!imported.tasks){
-        toast('無効なファイルです');return;
-      }
+      if(!imported||typeof imported!=='object'||!imported.tasks){toast('無効なファイルです');return;}
       if(!confirm('現在のデータを上書きして読み込みますか?')) return;
-      DATA=Object.assign(init(),imported);
-      save();render();
-      toast('読み込みました');
-    }catch(err){
-      toast('読み込みに失敗しました');
-    }
+      DATA=Object.assign(init(),imported); save(); render(); toast('読み込みました');
+    }catch{toast('読み込みに失敗しました');}
     e.target.value='';
   };
   reader.readAsText(file);
 });
-document.getElementById('prev').onclick=()=>{offsetWeeks--;render();};
-document.getElementById('next').onclick=()=>{offsetWeeks++;render();};
-document.getElementById('goToday').onclick=()=>{offsetWeeks=0;render();};
 
-/* shortcuts */
 document.addEventListener('keydown',e=>{
   const tag=document.activeElement.tagName;
-  if(document.getElementById('dlOverlay').classList.contains('open')) return;
-  if(document.getElementById('pdOverlay').classList.contains('open')) return;
-  if(document.getElementById('recurOverlay').classList.contains('open')) return;
+  if(document.querySelector('.overlay.open')) return;
   if(tag!=='INPUT'&&tag!=='TEXTAREA'){
     if(e.key==='n'||e.key==='N'){const inp=document.querySelector('.add-inp[data-key="'+todayStr()+'"]');if(inp){inp.closest('.day-card').classList.remove('collapsed');inp.focus();}}
     if(e.key==='d'||e.key==='D') openDlModal();
@@ -1001,11 +1325,98 @@ document.addEventListener('click',e=>{
   if(!e.target.closest('#fab')&&!e.target.closest('#hints')) document.getElementById('hints').classList.remove('visible');
 });
 
+// ══ BOTTOM NAV ════════════════════════════════════════════════════════════════
+
+const BNAV_SECTIONS = ['freq','deadline','period','week'];
+
+function scrollToSection(sectionId) {
+  const el = document.querySelector('[data-section="'+sectionId+'"]');
+  if(!el) return;
+  const body = document.getElementById('body');
+  // account for header+stats height
+  const bodyRect = body.getBoundingClientRect();
+  const elRect = el.getBoundingClientRect();
+  const offset = elRect.top - bodyRect.top + body.scrollTop - 8;
+  body.scrollTo({top: Math.max(0, offset), behavior:'smooth'});
+  setActiveNav(sectionId);
+}
+
+function setActiveNav(sectionId) {
+  document.querySelectorAll('.bnav-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.section === sectionId);
+  });
+}
+
+function updateNavBadges() {
+  // freq: count unachieved tasks across all types this period
+  const freqMiss = DATA.freqTasks.filter(ft => {
+    const key = freqPeriodKey(ft.type);
+    return freqGetCount(ft, key) < ft.target;
+  }).length;
+  const bFreq = document.getElementById('badge-freq');
+  if(bFreq){ bFreq.textContent = freqMiss||''; bFreq.classList.toggle('show', freqMiss>0); }
+
+  // deadline: overdue + today-due count
+  const dlUrgent = DATA.deadlines.filter(dl => !dl.done && daysUntil(dl.dueDate) <= 0).length;
+  const bDl = document.getElementById('badge-deadline');
+  if(bDl){ bDl.textContent = dlUrgent||''; bDl.classList.toggle('show', dlUrgent>0); }
+
+  // period: overdue count
+  const pdUrgent = DATA.periods.filter(pd => !pd.done && pdUrgency(pd)==='overdue').length;
+  const bPd = document.getElementById('badge-period');
+  if(bPd){ bPd.textContent = pdUrgent||''; bPd.classList.toggle('show', pdUrgent>0); }
+
+  // week: undone tasks today
+  const todayTasks = DATA.tasks[todayStr()]||[];
+  const weekUndone = todayTasks.filter(t=>!t.done).length;
+  const bWk = document.getElementById('badge-week');
+  if(bWk){ bWk.textContent = weekUndone||''; bWk.classList.toggle('show', weekUndone>0); }
+}
+
+// scroll spy — update active nav based on scroll position
+function setupScrollSpy() {
+  const body = document.getElementById('body');
+  let ticking = false;
+  body.addEventListener('scroll', () => {
+    if(ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const bodyRect = body.getBoundingClientRect();
+      const midY = bodyRect.top + 120; // 120px from top = detection line
+      let active = BNAV_SECTIONS[0];
+      for(const id of BNAV_SECTIONS) {
+        const el = document.querySelector('[data-section="'+id+'"]');
+        if(!el) continue;
+        if(el.getBoundingClientRect().top <= midY) active = id;
+      }
+      setActiveNav(active);
+      ticking = false;
+    });
+  });
+}
+
+// wire up nav tap
+document.querySelectorAll('.bnav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const sec = btn.dataset.section;
+    // if freq/deadline/period are hidden, show them first
+    if((sec==='freq'||sec==='deadline'||sec==='period') && !DATA.dlVisible) {
+      DATA.dlVisible=true; save(); render();
+      requestAnimationFrame(()=>scrollToSection(sec));
+    } else {
+      scrollToSection(sec);
+    }
+  });
+});
+
+setupScrollSpy();
+
+
 let toastTimer;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2200);}
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 render();
+
 </script>
 </body>
 </html>
