@@ -2858,9 +2858,40 @@
         row.style.flexDirection = 'column';
         row.style.alignItems = 'stretch';
         row.style.gap = '6px';
-        row.innerHTML = `<label class="settings-row-label" style="font-size:.82rem">${label}</label>
-      <input id="${id}" class="modal-inp" placeholder="${ph}" autocomplete="off" autocorrect="off"
-        value="${fbCfg && fbCfg[id] || ''}" style="font-size:.8rem;font-family:var(--mono)">`;
+
+        const lbl = document.createElement('label');
+        lbl.className = 'settings-row-label';
+        lbl.style.fontSize = '.82rem';
+        lbl.textContent = label;
+
+        const inputWrap = document.createElement('div');
+        inputWrap.style.cssText = 'position:relative;display:flex;align-items:center';
+
+        const inp = document.createElement('input');
+        inp.id = id;
+        inp.className = 'modal-inp';
+        inp.type = 'password';           // マスク表示
+        inp.placeholder = ph;
+        inp.autocomplete = 'off';
+        inp.value = fbCfg && fbCfg[id] || '';
+        inp.style.cssText = 'font-size:.8rem;font-family:var(--mono);padding-right:36px;width:100%';
+
+        // 表示/非表示トグルボタン
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.style.cssText = 'position:absolute;right:8px;background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:.8rem;padding:4px;line-height:1';
+        toggle.textContent = '👁';
+        toggle.title = '表示/非表示';
+        toggle.onclick = () => {
+          const isHidden = inp.type === 'password';
+          inp.type = isHidden ? 'text' : 'password';
+          toggle.style.opacity = isHidden ? '1' : '0.4';
+        };
+
+        inputWrap.appendChild(inp);
+        inputWrap.appendChild(toggle);
+        row.appendChild(lbl);
+        row.appendChild(inputWrap);
         fbForm.appendChild(row);
       }
 
