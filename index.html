@@ -2067,9 +2067,18 @@
     function getMon(d) { const r = new Date(d); r.setHours(0, 0, 0, 0); const day = r.getDay(); r.setDate(r.getDate() + (day === 0 ? -6 : 1 - day)); return r; }
     function fmtShort(d) { return (d.getMonth() + 1) + '/' + d.getDate(); }
     function weekKey(mon) { return ds(mon); }
-    function uid() { return Math.random().toString(36).slice(2, 9); }
-    function parseDate(str) { const q = str.split('-').map(Number); const r = new Date(q[0], q[1] - 1, q[2]); r.setHours(0, 0, 0, 0); return r; }
-    function daysUntil(s) { return Math.round((parseDate(s) - today()) / 86400000); }
+    function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+    function parseDate(str) {
+      if (!str || typeof str !== 'string') return new Date(NaN);
+      const q = str.split('-').map(Number);
+      if (q.length !== 3 || q.some(isNaN)) return new Date(NaN);
+      const r = new Date(q[0], q[1] - 1, q[2]); r.setHours(0, 0, 0, 0); return r;
+    }
+    function daysUntil(s) {
+      const d = parseDate(s);
+      if (isNaN(d)) return 0;
+      return Math.round((d - today()) / 86400000);
+    }
     function esc(s) { return s.replace(/&/g, '\x26amp;').replace(/</g, '\x26lt;').replace(/>/g, '\x26gt;'); }
 
     // ══ DOMAIN HELPERS ════════════════════════════════════════════════════════════
@@ -2119,9 +2128,15 @@
     function freqPeriodKey(type, d) {
       d = d || today();
       if (type === 'weekly') {
-        const mon = getMon(d), y = mon.getFullYear();
-        const jan1 = new Date(y, 0, 1);
-        const wk = Math.ceil(((mon - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+        // ISO 8601: week containing Thursday, Monday start
+        const mon = getMon(d);
+        // Find Thursday of this week
+        const thu = new Date(mon); thu.setDate(mon.getDate() + 3);
+        const y = thu.getFullYear();
+        // First Monday of the year containing this Thursday
+        const jan4 = new Date(y, 0, 4); // Jan 4 is always in W1
+        const w1mon = getMon(jan4);
+        const wk = Math.round((mon - w1mon) / 604800000) + 1;
         return y + '-W' + p(wk);
       }
       if (type === 'monthly') return d.getFullYear() + '-' + p(d.getMonth() + 1);
@@ -2151,6 +2166,19 @@
         }
       }
       DATA.carried[wk] = true; save();
+    }
+
+    // clean up carried keys older than 60 days (run once on startup)
+    function cleanCarried() {
+      const cutoff = addDays(today(), -60);
+      let changed = false;
+      for (const key of Object.keys(DATA.carried)) {
+        // key format: "_recur_YYYY-MM-DD" or "carry_YYYY-MM-DD"
+        const dateStr = key.replace(/^(_recur_|carry_)/, '');
+        const d = parseDate(dateStr);
+        if (!isNaN(d) && d < cutoff) { delete DATA.carried[key]; changed = true; }
+      }
+      if (changed) save();
     }
 
     // -- streak
@@ -2187,6 +2215,7 @@
     const SVG_UPLOAD = '<svg class="ih-icon ih-upload" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" fill="none"/><path class="arrow" d="M7 9l5 -5l5 5" fill="none"/><path d="M12 4l0 12" fill="none"/></svg>';
 
     function navigateTo(page) {
+      if (page === 'home') offsetWeeks = 0; // always show current week context on home
       currentPage = page;
       render();
     }
@@ -2299,7 +2328,8 @@
       todayBody.appendChild(barWrap);
 
       const undone = todayTasks.filter(t => !t.done);
-      const showTasks = todayTasks.slice(0, 4);
+      const showTasks = undone.length > 0 ? undone.slice(0, 4) : todayTasks.slice(0, 4);
+      const showMore = (undone.length > 0 ? undone.length : todayTasks.length) - 4;
       if (showTasks.length === 0) {
         const em = document.createElement('div');
         em.className = 'home-empty'; em.textContent = '今日のタスクなし';
@@ -2318,10 +2348,10 @@
           row.appendChild(cb); row.appendChild(txt);
           todayBody.appendChild(row);
         }
-        if (todayTasks.length > 4) {
+        if (showMore > 0) {
           const more = document.createElement('div');
           more.className = 'home-more';
-          more.textContent = '他 ' + (todayTasks.length - 4) + ' 件';
+          more.textContent = '他 ' + showMore + ' 件';
           todayBody.appendChild(more);
         }
       }
@@ -2364,9 +2394,10 @@
           grid.appendChild(mini);
         }
         freqBody.appendChild(grid);
-        if (DATA.freqTasks.length > 4) {
+        if (freqItems.length >= 4 && DATA.freqTasks.filter(ft => freqGetCount(ft, freqPeriodKey(ft.type)) < ft.target).length > 4) {
           const more = document.createElement('div'); more.className = 'home-more';
-          more.textContent = '他 ' + (DATA.freqTasks.length - 4) + ' 件'; freqBody.appendChild(more);
+          const totalMiss = DATA.freqTasks.filter(ft => freqGetCount(ft, freqPeriodKey(ft.type)) < ft.target).length;
+          more.textContent = '他 ' + (totalMiss - 4) + ' 件'; freqBody.appendChild(more);
         }
       }
       freqSec.appendChild(freqBody);
@@ -2454,7 +2485,7 @@
     // helper: replace a named section in place without full re-render
     function replaceSection(sectionId, buildFn) {
       const old = document.querySelector('[data-section="' + sectionId + '"]');
-      if (!old) return;
+      if (!old) { render(); return; } // section not in current page → full re-render
       const next = buildFn();
       next.dataset.section = sectionId;
       old.replaceWith(next);
@@ -2681,11 +2712,11 @@
 
       const cb = document.createElement('input');
       cb.type = 'checkbox'; cb.className = 'dl-cb'; if (dl.done) cb.checked = true;
-      cb.onchange = e => { dl.done = e.target.checked; save(); render(); };
+      cb.onchange = e => { dl.done = e.target.checked; save(); replaceSection('deadline', () => buildDeadlineSection(mon, sun)); };
 
       const textSpan = document.createElement('span');
       textSpan.className = 'dl-text'; textSpan.textContent = dl.text;
-      textSpan.onclick = () => { dl.done = !dl.done; save(); render(); };
+      textSpan.onclick = () => { dl.done = !dl.done; save(); replaceSection('deadline', () => buildDeadlineSection(mon, sun)); };
 
       const badge = document.createElement('span');
       badge.className = 'dl-badge ' + u; badge.textContent = dlLabel(dl);
@@ -2726,11 +2757,11 @@
 
       const cb = document.createElement('input');
       cb.type = 'checkbox'; cb.className = 'dl-cb'; if (pd.done) cb.checked = true;
-      cb.onchange = e => { pd.done = e.target.checked; save(); render(); };
+      cb.onchange = e => { pd.done = e.target.checked; save(); replaceSection('period', () => buildPeriodSection(mon, sun)); };
 
       const textSpan = document.createElement('span');
       textSpan.className = 'pd-text'; textSpan.textContent = pd.text;
-      textSpan.onclick = () => { pd.done = !pd.done; save(); render(); };
+      textSpan.onclick = () => { pd.done = !pd.done; save(); replaceSection('period', () => buildPeriodSection(mon, sun)); };
 
       const badge = document.createElement('span');
       badge.className = 'pd-badge ' + u; badge.textContent = pdLabel(pd);
@@ -3135,6 +3166,7 @@
     let toastTimer;
     function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2200); }
 
+    cleanCarried();
     render();
 
     // ── Service Worker 登録
