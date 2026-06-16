@@ -1,7 +1,7 @@
 {
     "name": "週間 TODO",
     "short_name": "WTODO",
-    "description": "週次・締切・期間・回数タスク管理アプリ",
+    "description": "週次・締切・期間・回数タスク管理アプリ v0.13.0",
     "start_url": "./",
     "scope": "./",
     "display": "standalone",

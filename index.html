@@ -13,6 +13,81 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="WTODO">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <!-- Firebase SDK (ES Modules via CDN) -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import { getDatabase, ref, set, get, onValue, off }
+      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+    // メインスクリプト（非モジュール）へのブリッジ
+    // window.FB_SDK にAPIをまとめて公開する
+    window.FB_SDK = {
+      initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signOut,
+      onAuthStateChanged, getDatabase, ref, set, get, onValue, off,
+      // アプリインスタンスは設定後に格納
+      _app: null, _auth: null, _db: null,
+
+      // Firebase初期化（設定が揃ったら呼ぶ）
+      init(cfg) {
+        try {
+          this._app = initializeApp(cfg, 'wtodo');
+          this._auth = getAuth(this._app);
+          this._db = getDatabase(this._app);
+          return true;
+        } catch (e) {
+          console.error('[FB_SDK] init error:', e);
+          return false;
+        }
+      },
+
+      // Googleログイン
+      async signInWithGoogle() {
+        const provider = new GoogleAuthProvider();
+        return signInWithPopup(this._auth, provider);
+      },
+
+      // ログアウト
+      async signOut() {
+        return signOut(this._auth);
+      },
+
+      // 認証状態の監視
+      onAuthStateChanged(cb) {
+        if (!this._auth) return () => { };
+        return onAuthStateChanged(this._auth, cb);
+      },
+
+      // データ書き込み
+      async setData(uid, data) {
+        const r = ref(this._db, 'users/' + uid + '/data');
+        return set(r, data);
+      },
+
+      // データ読み込み（1回）
+      async getData(uid) {
+        const r = ref(this._db, 'users/' + uid + '/data');
+        const snap = await get(r);
+        return snap.exists() ? snap.val() : null;
+      },
+
+      // リアルタイム監視開始
+      onDataChange(uid, cb) {
+        const r = ref(this._db, 'users/' + uid + '/data');
+        onValue(r, snap => { if (snap.exists()) cb(snap.val()); });
+        // cleanup関数を返す
+        return () => off(r);
+      },
+    };
+
+    // メインスクリプトの初期化完了を待ってFirebase自動初期化を試みる
+    window.addEventListener('wtodo-ready', () => {
+      if (typeof window.wtodoFirebaseInit === 'function') {
+        window.wtodoFirebaseInit();
+      }
+    });
+  </script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
 
@@ -1746,6 +1821,379 @@
       font-style: italic
     }
 
+    /* ── settings page ── */
+    .settings-page {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 4px 0 20px
+    }
+
+    .settings-group {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden
+    }
+
+    .settings-group-title {
+      font-family: var(--mono);
+      font-size: .68rem;
+      color: var(--text-sub);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 10px 14px 4px
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-top: 1px solid var(--border)
+    }
+
+    .settings-row:first-of-type {
+      border-top: none
+    }
+
+    .settings-row-label {
+      flex: 1;
+      font-size: .9rem;
+      color: var(--text);
+      line-height: 1.3
+    }
+
+    .settings-row-sub {
+      font-size: .75rem;
+      color: var(--text-sub);
+      margin-top: 2px
+    }
+
+    .settings-row-val {
+      font-family: var(--mono);
+      font-size: .78rem;
+      color: var(--text-sub);
+      white-space: nowrap
+    }
+
+    .toggle-wrap {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0
+    }
+
+    .toggle-wrap input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute
+    }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border2);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background .2s
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform .2s
+    }
+
+    .toggle-wrap input:checked+.toggle-slider {
+      background: var(--accent)
+    }
+
+    .toggle-wrap input:checked+.toggle-slider::before {
+      transform: translateX(20px)
+    }
+
+    .sync-mode-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 14px 14px
+    }
+
+    .sync-radio-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      transition: border-color .15s
+    }
+
+    .sync-radio-label.selected {
+      border-color: var(--accent);
+      background: var(--accent-dim)
+    }
+
+    .sync-radio-label input {
+      margin-top: 3px;
+      accent-color: var(--accent);
+      flex-shrink: 0
+    }
+
+    .sync-radio-title {
+      font-size: .88rem;
+      color: var(--text);
+      font-weight: 500
+    }
+
+    .sync-radio-desc {
+      font-size: .75rem;
+      color: var(--text-sub);
+      margin-top: 2px
+    }
+
+    .firebase-config {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border-top: 1px solid var(--border)
+    }
+
+    .firebase-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .firebase-field:last-child {
+      border-bottom: none
+    }
+
+    .firebase-label {
+      font-size: .72rem;
+      color: var(--text-sub);
+      font-family: var(--mono)
+    }
+
+    .firebase-input {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      color: var(--text);
+      font-size: .84rem;
+      font-family: var(--mono);
+      padding: 7px 10px;
+      outline: none;
+      transition: border-color .15s;
+      width: 100%
+    }
+
+    .firebase-input:focus {
+      border-color: var(--accent)
+    }
+
+    .sync-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      font-size: .82rem
+    }
+
+    .sync-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0
+    }
+
+    .sync-dot.connected {
+      background: var(--accent)
+    }
+
+    .sync-dot.disconnected {
+      background: var(--text-sub)
+    }
+
+    .sync-dot.error {
+      background: var(--danger)
+    }
+
+    .sync-dot.syncing {
+      background: var(--warn);
+      animation: pulse .8s infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .4
+      }
+    }
+
+    .sync-status-text {
+      flex: 1;
+      color: var(--text-sub)
+    }
+
+    .sync-last {
+      font-family: var(--mono);
+      font-size: .72rem;
+      color: var(--text-sub)
+    }
+
+    .settings-btn {
+      width: 100%;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 0;
+      padding: 12px 14px;
+      font-size: .88rem;
+      font-family: var(--sans);
+      cursor: pointer;
+      text-align: left;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: none
+    }
+
+    .settings-btn:first-child {
+      border-top: 1px solid var(--border)
+    }
+
+    .settings-btn:last-child {
+      border-bottom: 1px solid var(--border)
+    }
+
+    .settings-btn:active {
+      color: var(--accent)
+    }
+
+    .settings-btn.danger {
+      color: var(--danger)
+    }
+
+    .settings-version {
+      font-family: var(--mono);
+      font-size: .72rem;
+      color: var(--text-sub);
+      text-align: center;
+      padding: 4px 0 0
+    }
+
+    /* ── sync indicator ── */
+    .sync-indicator {
+      font-family: var(--mono);
+      font-size: .65rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      /* push hdr-right to the right */
+      padding-left: 8px;
+      opacity: 0;
+      transition: opacity .3s;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .sync-indicator.visible {
+      opacity: 1
+    }
+
+    .sync-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: background .3s;
+    }
+
+    .sync-indicator.syncing .sync-dot {
+      background: var(--warn);
+      animation: pulse .8s infinite
+    }
+
+    .sync-indicator.synced .sync-dot {
+      background: var(--accent)
+    }
+
+    .sync-indicator.error .sync-dot {
+      background: var(--danger)
+    }
+
+    .sync-indicator.offline .sync-dot {
+      background: var(--text-sub)
+    }
+
+    .sync-indicator.syncing .sync-text {
+      color: var(--warn)
+    }
+
+    .sync-indicator.synced .sync-text {
+      color: var(--accent)
+    }
+
+    .sync-indicator.error .sync-text {
+      color: var(--danger)
+    }
+
+    .sync-indicator.offline .sync-text {
+      color: var(--text-sub)
+    }
+
+    .sync-text {
+      font-size: .65rem
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .3
+      }
+    }
+
+    /* ── offline banner ── */
+    .offline-banner {
+      background: #1A1200;
+      border-bottom: 1px solid var(--warn);
+      color: var(--warn);
+      font-size: .78rem;
+      font-family: var(--mono);
+      padding: 6px 16px;
+      text-align: center;
+      display: none;
+    }
+
+    .offline-banner.show {
+      display: block
+    }
+
+
     button:active .ih-icon {
       transform: scale(.88)
     }
@@ -1819,8 +2267,13 @@
   <div class="app">
     <header>
       <div class="logo">WTODO</div>
+      <div class="sync-indicator" id="syncIndicator">
+        <span class="sync-dot"></span>
+        <span class="sync-text" id="syncText"></span>
+      </div>
       <div class="hdr-right" id="hdrRight"></div>
     </header>
+    <div class="offline-banner" id="offlineBanner">⚠️ オフライン — 変更はオンライン復帰時に同期されます</div>
     <div class="body" id="body"></div>
   </div>
 
@@ -1968,6 +2421,16 @@
       <span>今週</span>
       <span class="bnav-badge" id="badge-week"></span>
     </button>
+    <button class="bnav-item" data-page="settings" id="bnav-settings">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path
+          d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
+        <path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+      </svg>
+      <span>設定</span>
+      <span class="bnav-badge" id="badge-settings"></span>
+    </button>
   </nav>
   <input type="file" id="importFile" accept=".json" style="display:none">
 
@@ -2023,6 +2486,7 @@
     // ══ CONSTANTS ════════════════════════════════════════════════════════════════
 
     const STORE = 'wtodo_v4';
+    const FB_STORE = 'wtodo_firebase_config'; // Firebase設定専用（エクスポート対象外）
     const DAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
     const FREQ_TYPES = ['weekly', 'monthly', 'yearly'];
     const FREQ_TITLES = { weekly: '週次タスク', monthly: '月次タスク', yearly: '年次タスク' };
@@ -2046,16 +2510,156 @@
         tasks: {}, deadlines: [], periods: [], freqTasks: [], recurring: [],
         carried: {}, streak: { lastDoneDate: '', count: 0 },
         dlVisible: true, dlShowDone: false, pdShowDone: false,
+        updatedAt: 0, // Unix ms timestamp — 競合解決に使用
       };
     }
-    function load() {
-      try { return Object.assign(init(), JSON.parse(localStorage.getItem(STORE) || 'null') || {}); }
-      catch { return init(); }
+
+    // Firebase設定（アプリデータとは分離保存）
+    function loadFbConfig() {
+      try { return JSON.parse(localStorage.getItem(FB_STORE) || 'null') || null; }
+      catch { return null; }
     }
-    function save() { localStorage.setItem(STORE, JSON.stringify(DATA)); }
+    function saveFbConfig(cfg) {
+      if (cfg) localStorage.setItem(FB_STORE, JSON.stringify(cfg));
+      else localStorage.removeItem(FB_STORE);
+    }
+
+    // ── StorageAdapter ────────────────────────────────────────────────────────────
+    class StorageAdapter {
+      constructor() {
+        this.mode = 'local';   // 'local' | 'firebase'
+        this.db = null;      // Firebase DB reference（Step3で設定）
+        this.uid = null;      // Firebase UID（Step3で設定）
+        this._remoteUnsubscribe = null; // Firebase listener cleanup
+        this._lastSavedJson = null;     // 重複保存防止
+        this._pendingSync = false;    // オフライン時のsync保留フラグ
+      }
+
+      // ── ローカル読み込み
+      loadLocal() {
+        try {
+          return Object.assign(init(), JSON.parse(localStorage.getItem(STORE) || 'null') || {});
+        } catch { return init(); }
+      }
+
+      // ── ローカル書き込み
+      saveLocal(data) {
+        localStorage.setItem(STORE, JSON.stringify(data));
+      }
+
+      // ── 保存（モードに応じて振り分け）
+      save(data) {
+        // タイムスタンプを更新
+        data.updatedAt = Date.now();
+
+        const json = JSON.stringify(data);
+
+        // 常にlocalStorageに即時保存（オフライン保険）
+        localStorage.setItem(STORE, json);
+
+        // Firebase モードかつ接続済みの場合は非同期でFirebaseにも保存
+        if (this.mode === 'firebase' && this.db && this.uid) {
+          if (json === this._lastSavedJson) return;
+          this._lastSavedJson = json;
+          if (navigator.onLine) {
+            this._pushToFirebase(data);
+          } else {
+            // オフライン → 復帰時に同期するためフラグを立てる
+            this._pendingSync = true;
+            setSyncIndicator('offline');
+          }
+        }
+      }
+
+      // ── Firebase への書き込み
+      _pushToFirebase(data) {
+        if (!window.FB_SDK?._db || !this.uid) return;
+        setSyncIndicator('syncing');
+        window.FB_SDK.setData(this.uid, data)
+          .then(() => {
+            this._pendingSync = false;
+            setSyncIndicator('synced');
+          })
+          .catch(e => {
+            console.warn('[StorageAdapter] Firebase write error:', e);
+            this._pendingSync = true;
+            setSyncIndicator('error');
+          });
+      }
+
+      // ── リモート変更の監視開始
+      startRemoteListener(onUpdate) {
+        this.stopRemoteListener();
+        if (!window.FB_SDK?._db || !this.uid) return;
+        this._remoteUnsubscribe = window.FB_SDK.onDataChange(this.uid, remoteData => {
+          const remoteJson = JSON.stringify(remoteData);
+          // 自分の書き込みエコーは無視
+          if (remoteJson === this._lastSavedJson) return;
+
+          // 競合解決: updatedAt タイムスタンプで新しい方を採用
+          const localTs = DATA.updatedAt || 0;
+          const remoteTs = remoteData.updatedAt || 0;
+
+          if (remoteTs > localTs) {
+            // リモートが新しい → リモートを採用
+            this._lastSavedJson = remoteJson;
+            onUpdate(remoteData);
+          } else if (remoteTs < localTs) {
+            // ローカルが新しい → ローカルをFirebaseに上書き送信
+            console.debug('[StorageAdapter] local is newer, pushing to Firebase');
+            this._pushToFirebase(DATA);
+          }
+          // 同タイムスタンプは無視（同一データ）
+        });
+      }
+
+      // ── リモート変更の監視停止
+      stopRemoteListener() {
+        if (this._remoteUnsubscribe) {
+          this._remoteUnsubscribe();
+          this._remoteUnsubscribe = null;
+        }
+      }
+
+      // ── Firebase モードに切り替え（Step3で呼ぶ）
+      setFirebaseMode(db, uid) {
+        this.mode = 'firebase';
+        this.db = db;
+        this.uid = uid;
+      }
+
+      // ── ローカルモードに戻す
+      setLocalMode() {
+        this.stopRemoteListener();
+        this.mode = 'local';
+        this.db = null;
+        this.uid = null;
+        this._lastSavedJson = null;
+      }
+
+      // ── 接続状態
+      get isFirebaseReady() {
+        return this.mode === 'firebase' && this.db !== null && this.uid !== null;
+      }
+
+      // ── 同期ステータス文字列（Settings画面に表示）
+      get statusLabel() {
+        if (this.mode === 'local') return 'ローカルのみ';
+        if (this.isFirebaseReady) return '✅ Firebase同期中';
+        return '⚠️ Firebase未接続';
+      }
+    }
+
+    // グローバルアダプターインスタンス
+    const adapter = new StorageAdapter();
+
+    // ── 既存コードとの互換ラッパー（save/load をアダプター経由に）
+    function load() { return adapter.loadLocal(); }
+    function save() { adapter.save(DATA); }
 
     let DATA = load();
     let offsetWeeks = 0;
+
 
     // ══ DATE HELPERS ══════════════════════════════════════════════════════════════
 
@@ -2191,7 +2795,240 @@
       }
     }
 
-    // ══ RENDER: TOP LEVEL ═════════════════════════════════════════════════════════
+    // ══ SETTINGS PAGE ════════════════════════════════════════════════════════════
+
+    function buildSettingsPage() {
+      const page = document.createElement('div');
+      page.className = 'settings-page';
+
+      // ── 同期設定
+      const syncGroup = settingsGroup('同期設定');
+
+      const fbCfg = loadFbConfig();
+      const syncMode = fbCfg ? 'firebase' : 'local';
+
+      // mode selector row
+      const modeRow = document.createElement('div');
+      modeRow.className = 'settings-row';
+      modeRow.style.flexDirection = 'column';
+      modeRow.style.alignItems = 'stretch';
+      modeRow.style.gap = '10px';
+
+      const modeLabel = document.createElement('div');
+      modeLabel.className = 'settings-row-label';
+      modeLabel.textContent = '同期モード';
+
+      const modeOpts = document.createElement('div');
+      modeOpts.style.cssText = 'display:flex;flex-direction:column;gap:6px';
+
+      for (const [val, label, sub] of [
+        ['local', 'ローカルのみ', 'このデバイスだけで使用（デフォルト）'],
+        ['firebase', 'Firebase同期', '複数端末でデータを自動同期'],
+      ]) {
+        const opt = document.createElement('label');
+        opt.style.cssText = 'display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:8px 10px;border:1px solid var(--border);border-radius:6px;transition:border-color .15s';
+        if (syncMode === val) opt.style.borderColor = 'var(--accent)';
+        opt.innerHTML = `<input type="radio" name="syncMode" value="${val}" ${syncMode === val ? 'checked' : ''} style="margin-top:3px;accent-color:var(--accent)">
+      <div><div style="font-size:.88rem;color:var(--text)">${label}</div>
+      <div style="font-size:.76rem;color:var(--text-sub);margin-top:2px">${sub}</div></div>`;
+        opt.querySelector('input').onchange = () => {
+          document.querySelectorAll('label[style*="border-color"]').forEach(l => l.style.borderColor = 'var(--border)');
+          opt.style.borderColor = 'var(--accent)';
+          toggleFbForm(val === 'firebase');
+        };
+        modeOpts.appendChild(opt);
+      }
+
+      modeRow.appendChild(modeLabel);
+      modeRow.appendChild(modeOpts);
+      syncGroup.appendChild(modeRow);
+
+      // Firebase設定フォーム（firebase選択時のみ表示）
+      const fbForm = document.createElement('div');
+      fbForm.id = 'fbForm';
+      fbForm.style.cssText = 'display:' + (syncMode === 'firebase' ? 'block' : 'none');
+
+      for (const [id, label, ph] of [
+        ['fbApiKey', 'API Key', 'AIzaSy...'],
+        ['fbProjectId', 'Project ID', 'my-project-id'],
+        ['fbDbUrl', 'Database URL', 'https://my-project-default-rtdb.firebaseio.com'],
+      ]) {
+        const row = document.createElement('div');
+        row.className = 'settings-row';
+        row.style.flexDirection = 'column';
+        row.style.alignItems = 'stretch';
+        row.style.gap = '6px';
+        row.innerHTML = `<label class="settings-row-label" style="font-size:.82rem">${label}</label>
+      <input id="${id}" class="modal-inp" placeholder="${ph}" autocomplete="off" autocorrect="off"
+        value="${fbCfg && fbCfg[id] || ''}" style="font-size:.8rem;font-family:var(--mono)">`;
+        fbForm.appendChild(row);
+      }
+
+      // 接続状態・テストボタン
+      const testRow = document.createElement('div');
+      testRow.className = 'settings-row';
+      testRow.innerHTML = `<span class="settings-row-label">接続状態</span>
+    <span class="settings-row-val" id="fbStatus">${adapter.statusLabel}</span>`;
+
+      const btnRow = document.createElement('div');
+      btnRow.style.cssText = 'display:flex;gap:8px;padding:0 14px 12px;flex-wrap:wrap';
+
+      const testBtn = document.createElement('button');
+      testBtn.className = 'modal-submit';
+      testBtn.style.cssText = 'flex:1;padding:9px;min-width:80px';
+      testBtn.textContent = '接続テスト';
+      testBtn.onclick = () => runFbConnectionTest();
+
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'modal-submit';
+      saveBtn.style.cssText = 'flex:1;padding:9px;background:var(--surface2);color:var(--text);border:1px solid var(--border2);min-width:80px';
+      saveBtn.textContent = '設定を保存';
+      saveBtn.onclick = () => saveFbSettings();
+
+      // Googleログインボタン
+      const loginBtn = document.createElement('button');
+      loginBtn.className = 'modal-submit';
+      loginBtn.style.cssText = 'width:100%;padding:9px;background:#4285F4;margin-top:4px';
+      loginBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Googleでログイン';
+      loginBtn.onclick = () => signInWithGoogle();
+
+      // ログアウトボタン（ログイン済みの場合のみ）
+      const isLoggedIn = window.FB_SDK?._auth?.currentUser;
+      if (isLoggedIn) {
+        const logoutBtn = document.createElement('button');
+        logoutBtn.className = 'modal-cancel';
+        logoutBtn.style.cssText = 'width:100%;padding:9px;margin-top:4px';
+        logoutBtn.textContent = 'ログアウト（' + isLoggedIn.displayName + '）';
+        logoutBtn.onclick = () => signOutFromFirebase();
+        btnRow.appendChild(logoutBtn);
+      }
+
+      const disconnectBtn = document.createElement('button');
+      disconnectBtn.className = 'modal-cancel';
+      disconnectBtn.style.cssText = 'width:100%;padding:9px;margin-top:4px;color:var(--danger);border-color:var(--danger)';
+      disconnectBtn.textContent = 'Firebase設定を削除';
+      disconnectBtn.onclick = () => {
+        if (!confirm('Firebase設定を削除してローカルモードに戻しますか？')) return;
+        signOutFromFirebase().then(() => {
+          saveFbConfig(null);
+          toast('接続を解除しました');
+          render();
+        });
+      };
+
+      fbForm.appendChild(testRow);
+      fbForm.appendChild(btnRow);
+      btnRow.appendChild(testBtn);
+      btnRow.appendChild(saveBtn);
+      btnRow.appendChild(loginBtn);
+      if (fbCfg) fbForm.appendChild(disconnectBtn);
+
+      syncGroup.appendChild(fbForm);
+      page.appendChild(syncGroup);
+
+      // ── データ管理
+      const dataGroup = settingsGroup('データ管理');
+
+      const exportBtn = settingsBtn('⬇ エクスポート', false, () => {
+        const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'wtodo-' + todayStr() + '.json';
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
+        toast('書き出しました');
+      });
+      const importBtn = settingsBtn('⬆ インポート', false, () => document.getElementById('importFile').click());
+      const clearBtn = settingsBtn('🗑 全データ削除', true, () => {
+        if (!confirm('すべてのタスクデータを削除します。この操作は元に戻せません。')) return;
+        DATA = init(); save(); render(); toast('データを削除しました');
+      });
+
+      dataGroup.appendChild(exportBtn);
+      dataGroup.appendChild(importBtn);
+      dataGroup.appendChild(clearBtn);
+      page.appendChild(dataGroup);
+
+      // ── アプリ情報
+      const infoGroup = settingsGroup('アプリ情報');
+      infoGroup.appendChild(settingsInfoRow('バージョン', 'v0.13.0'));
+      infoGroup.appendChild(settingsInfoRow('同期モード', adapter.statusLabel));
+      infoGroup.appendChild(settingsInfoRow('データ保存', 'ローカルストレージ'));
+      infoGroup.appendChild(settingsInfoRow('タスク総数',
+        Object.values(DATA.tasks).flat().length +
+        DATA.deadlines.length + DATA.periods.length + DATA.freqTasks.length + '件'));
+      page.appendChild(infoGroup);
+
+      const ver = document.createElement('div');
+      ver.className = 'settings-version';
+      ver.textContent = 'WTODO v0.13.0';
+      page.appendChild(ver);
+
+      return page;
+    }
+
+    // ── settings helpers
+    function settingsGroup(title) {
+      const g = document.createElement('div');
+      g.className = 'settings-group';
+      const t = document.createElement('div');
+      t.className = 'settings-group-title';
+      t.textContent = title;
+      g.appendChild(t);
+      return g;
+    }
+    function settingsBtn(label, danger, onclick) {
+      const btn = document.createElement('button');
+      btn.className = 'settings-btn' + (danger ? ' danger' : '');
+      btn.textContent = label;
+      btn.onclick = onclick;
+      return btn;
+    }
+    function settingsInfoRow(label, val) {
+      const row = document.createElement('div');
+      row.className = 'settings-row';
+      row.innerHTML = `<span class="settings-row-label">${label}</span>
+    <span class="settings-row-val">${val}</span>`;
+      return row;
+    }
+    function toggleFbForm(show) {
+      const f = document.getElementById('fbForm');
+      if (f) f.style.display = show ? 'block' : 'none';
+    }
+
+    // Firebase設定を保存して初期化を試みる
+    function saveFbSettings() {
+      const apiKey = document.getElementById('fbApiKey')?.value.trim();
+      const projectId = document.getElementById('fbProjectId')?.value.trim();
+      const dbUrl = document.getElementById('fbDbUrl')?.value.trim();
+      if (!apiKey || !projectId || !dbUrl) { toast('すべての項目を入力してください'); return; }
+      saveFbConfig({ fbApiKey: apiKey, fbProjectId: projectId, fbDbUrl: dbUrl });
+      toast('設定を保存しました');
+      // SDK が既にロード済みなら即初期化を試みる
+      if (window.FB_SDK) window.wtodoFirebaseInit();
+      render();
+    }
+
+    // 接続テスト（設定保存 → Googleログイン）
+    function runFbConnectionTest() {
+      const status = document.getElementById('fbStatus');
+      const cfg = loadFbConfig();
+      if (!cfg) { toast('先に設定を保存してください'); return; }
+      if (status) status.textContent = '⏳ 接続テスト中…';
+      // Firebase初期化 → Googleログインポップアップ
+      if (window.FB_SDK) {
+        window.wtodoFirebaseInit().then(() => {
+          // onAuthStateChanged が発火、未ログインなら自動ログイン
+          if (!window.FB_SDK._auth?.currentUser) signInWithGoogle();
+        }).catch(() => {
+          if (status) status.textContent = '⚠️ 接続失敗';
+        });
+      } else {
+        if (status) status.textContent = '⚠️ SDK未ロード（ページを再読み込みしてください）';
+      }
+    }
+
+
 
     let currentPage = 'home';
 
@@ -2209,6 +3046,7 @@
     <span class="week-range" id="wrange">-</span>
     <button class="nav-btn" id="next"><svg class="ih-icon ih-chevron-right" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6" fill="none"/></svg></button>
     <button class="pill-btn" id="goToday">今週</button>`,
+      settings: () => '',
     };
 
     const SVG_DOWNLOAD = '<svg class="ih-icon ih-download" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" fill="none"/><path class="arrow" d="M7 11l5 5l5 -5" fill="none"/><path d="M12 4l0 12" fill="none"/></svg>';
@@ -2245,6 +3083,7 @@
         case 'deadline': body.appendChild(buildDeadlineSection(mon, sun)); break;
         case 'period': body.appendChild(buildPeriodSection(mon, sun)); break;
         case 'week': renderWeekPage(body, mon, sun); break;
+        case 'settings': body.appendChild(buildSettingsPage()); break;
       }
       updateNavBadges();
     }
@@ -3166,8 +4005,221 @@
     let toastTimer;
     function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2200); }
 
+    // ══ SYNC INDICATOR & OFFLINE HANDLING ════════════════════════════════════════
+
+    let _syncTimer = null;
+
+    function setSyncIndicator(state) {
+      // Firebase モードのときだけ表示
+      if (!adapter.isFirebaseReady && state !== 'offline') return;
+
+      const el = document.getElementById('syncIndicator');
+      const text = document.getElementById('syncText');
+      if (!el || !text) return;
+
+      // 状態クラスを入れ替え
+      el.className = 'sync-indicator visible ' + state;
+
+      const labels = {
+        syncing: '同期中…',
+        synced: '同期済み',
+        error: '同期失敗',
+        offline: 'オフライン',
+      };
+      text.textContent = labels[state] || '';
+
+      // 「同期済み」は2秒後に非表示
+      clearTimeout(_syncTimer);
+      if (state === 'synced') {
+        _syncTimer = setTimeout(() => {
+          if (el) el.classList.remove('visible');
+        }, 2000);
+      }
+    }
+
+    function setOfflineBanner(show) {
+      const el = document.getElementById('offlineBanner');
+      if (el) el.classList.toggle('show', show);
+    }
+
+    // ── オンライン復帰時：保留中の変更をFirebaseに送信
+    async function onNetworkOnline() {
+      setOfflineBanner(false);
+      if (!adapter.isFirebaseReady) return;
+
+      if (adapter._pendingSync) {
+        setSyncIndicator('syncing');
+        try {
+          // ローカルの最新データをFirebaseと比較して新しい方を採用
+          const remote = await window.FB_SDK.getData(adapter.uid);
+          const localTs = DATA.updatedAt || 0;
+          const remoteTs = remote?.updatedAt || 0;
+
+          if (localTs >= remoteTs) {
+            // ローカルが新しい or 同じ → ローカルをFirebaseに送る
+            await window.FB_SDK.setData(adapter.uid, DATA);
+            setSyncIndicator('synced');
+          } else {
+            // リモートが新しい → リモートを採用
+            DATA = Object.assign(init(), remote);
+            adapter.saveLocal(DATA);
+            render();
+            setSyncIndicator('synced');
+            toast('オンライン復帰：新しいデータに更新しました');
+          }
+          adapter._pendingSync = false;
+        } catch (e) {
+          console.warn('[onNetworkOnline] sync error:', e);
+          setSyncIndicator('error');
+        }
+      } else {
+        setSyncIndicator('synced');
+      }
+    }
+
+    // ── オフライン時
+    function onNetworkOffline() {
+      if (adapter.mode === 'firebase') {
+        setOfflineBanner(true);
+        setSyncIndicator('offline');
+      }
+    }
+
+    // ── ネットワークイベント登録
+    window.addEventListener('online', onNetworkOnline);
+    window.addEventListener('offline', onNetworkOffline);
+
+    // 初期状態チェック
+    if (!navigator.onLine && adapter.mode === 'firebase') {
+      setOfflineBanner(true);
+      setSyncIndicator('offline');
+    }
+
+    // ══ FIREBASE INIT & AUTH ══════════════════════════════════════════════════════
+
+    // Firebase設定が保存されていれば自動初期化を試みる
+    // （window.FB_SDK がモジュールスクリプトのロード完了後に呼ばれる）
+    window.wtodoFirebaseInit = async function () {
+      const cfg = loadFbConfig();
+      if (!cfg) return; // 設定なし → ローカルモードのまま
+
+      const sdk = window.FB_SDK;
+      if (!sdk) return;
+
+      // Firebase アプリを初期化
+      const ok = sdk.init({
+        apiKey: cfg.fbApiKey,
+        projectId: cfg.fbProjectId,
+        databaseURL: cfg.fbDbUrl,
+        authDomain: cfg.fbProjectId + '.firebaseapp.com',
+      });
+      if (!ok) { updateSyncStatus('⚠️ 初期化失敗'); return; }
+
+      // 認証状態を監視
+      sdk.onAuthStateChanged(async user => {
+        if (user) {
+          adapter.setFirebaseMode(sdk._db, user.uid);
+          setSyncIndicator('syncing');
+
+          await syncFromFirebase(user.uid);
+
+          adapter.startRemoteListener(remoteData => {
+            DATA = Object.assign(init(), remoteData);
+            adapter.saveLocal(DATA);
+            render();
+            setSyncIndicator('synced');
+            toast('他の端末から同期しました');
+          });
+
+          setSyncIndicator('synced');
+          updateSyncStatus('✅ Firebase同期中');
+          render();
+        } else {
+          adapter.setLocalMode();
+          const el = document.getElementById('syncIndicator');
+          if (el) el.classList.remove('visible');
+          updateSyncStatus('─ 未ログイン');
+        }
+      });
+    };
+
+    // Firebase からデータを取得してローカルとマージ（初回同期）
+    async function syncFromFirebase(uid) {
+      try {
+        const remote = await window.FB_SDK.getData(uid);
+        if (remote) {
+          const localTs = DATA.updatedAt || 0;
+          const remoteTs = remote.updatedAt || 0;
+
+          if (remoteTs > localTs) {
+            // リモートが新しい → リモートを採用
+            DATA = Object.assign(init(), remote);
+            adapter.saveLocal(DATA);
+            toast('Firebaseから最新データを取得しました');
+          } else if (localTs > remoteTs) {
+            // ローカルが新しい → ローカルをFirebaseに送る
+            await window.FB_SDK.setData(uid, DATA);
+            toast('ローカルの新しいデータをFirebaseに送信しました');
+          }
+          // 同タイムスタンプ → 何もしない
+        } else {
+          // Firebaseにデータなし → ローカルを移行
+          await window.FB_SDK.setData(uid, DATA);
+          toast('ローカルデータをFirebaseに移行しました');
+        }
+      } catch (e) {
+        console.warn('[syncFromFirebase] error:', e);
+        setSyncIndicator('error');
+        toast('同期に失敗しました（オフライン？）');
+      }
+    }
+
+    // Settings画面のステータス表示を更新
+    function updateSyncStatus(label) {
+      const el = document.getElementById('fbStatus');
+      if (el) el.textContent = label;
+    }
+
+    // Googleログイン
+    async function signInWithGoogle() {
+      const sdk = window.FB_SDK;
+      if (!sdk?._auth) { toast('先に設定を保存してください'); return; }
+      try {
+        updateSyncStatus('⏳ ログイン中…');
+        await sdk.signInWithGoogle();
+        // onAuthStateChanged が発火して自動的に処理される
+      } catch (e) {
+        console.warn('[signInWithGoogle] error:', e);
+        updateSyncStatus('⚠️ ログイン失敗');
+        toast('ログインに失敗しました');
+      }
+    }
+
+    // ログアウト
+    async function signOutFromFirebase() {
+      const sdk = window.FB_SDK;
+      if (!sdk?._auth) return;
+      try {
+        adapter.stopRemoteListener();
+        await sdk.signOut();
+        adapter.setLocalMode();
+        updateSyncStatus('─ ログアウト済み');
+        toast('ログアウトしました');
+        render();
+      } catch (e) {
+        console.warn('[signOut] error:', e);
+        toast('ログアウトに失敗しました');
+      }
+    }
+
+
+
+    // ══ STARTUP ═══════════════════════════════════════════════════════════════════
     cleanCarried();
     render();
+
+    // Firebase モジュールスクリプトに初期化完了を通知
+    window.dispatchEvent(new Event('wtodo-ready'));
 
     // ── Service Worker 登録
     if ('serviceWorker' in navigator) {
